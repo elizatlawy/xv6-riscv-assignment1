@@ -83,13 +83,13 @@ runcmd(struct cmd *cmd) {
             if (ecmd->argv[0] == 0)
                 exit(1);
             exec(ecmd->argv[0], ecmd->argv);
-
+            // if exec fails, try to search the program in path file
             fd = open("/path",O_RDONLY);
             if (fd == -1){
                 fprintf(2, "fd failed\n", ecmd->argv[0]);
             }
-
-            if (myCmd[0] != '/'){
+            if (myCmd[0] != '/')
+                // looping over all paths in path file and try to exec in each one
                 while (read(fd,c,1) != 0){
                     // read the path string
                     if (c[0]!= ':'){
@@ -99,15 +99,14 @@ runcmd(struct cmd *cmd) {
                     // end of curr path
                     else{
                         while(myCmd[cmdLoc] != 0){
-                            s[stringLoc] = myCmd[cmdLoc];
+                            s[stringLoc] = myCmd[cmdLoc]; // add the program name to the path name
                             stringLoc++;
                             cmdLoc++;
                         }
-                        s[stringLoc] = 0; // null terminated string at the end of the command
+                        s[stringLoc] = 0; // add null termination string at the end of the command path
                         stringLoc = 0;
                         cmdLoc = 0;
-                        fprintf(2, "fath and command: %s \n", s);
-                        exec(s, ecmd->argv);
+                        exec(s, ecmd->argv); // try to exec with the full path
                     }
                 }
                 fprintf(2, "exec %s failed\n", ecmd->argv[0]);
