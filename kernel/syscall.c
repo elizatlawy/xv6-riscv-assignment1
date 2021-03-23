@@ -104,6 +104,7 @@ extern uint64 sys_unlink(void);
 extern uint64 sys_wait(void);
 extern uint64 sys_write(void);
 extern uint64 sys_uptime(void);
+extern uint64 sys_trace(void);
 
 static uint64 (*syscalls[])(void) = {
 [SYS_fork]    sys_fork,
@@ -127,8 +128,20 @@ static uint64 (*syscalls[])(void) = {
 [SYS_link]    sys_link,
 [SYS_mkdir]   sys_mkdir,
 [SYS_close]   sys_close,
+[SYS_trace]   sys_trace,
 };
 
+// for syscall trace - an array of all the syscall names
+static char *syscall_names[] = {
+        [SYS_fork] "fork",   [SYS_exit] "exit",     [SYS_wait] "wait",
+        [SYS_pipe] "pipe",   [SYS_read] "read",     [SYS_kill] "kill",
+        [SYS_exec] "exec",   [SYS_fstat] "fstat",   [SYS_chdir] "chdir",
+        [SYS_dup] "dup",     [SYS_getpid] "getpid", [SYS_sbrk] "sbrk",
+        [SYS_sleep] "sleep", [SYS_uptime] "uptime", [SYS_open] "open",
+        [SYS_write] "write", [SYS_mknod] "mknod",   [SYS_unlink] "unlink",
+        [SYS_link] "link",   [SYS_mkdir] "mkdir",   [SYS_close] "close",
+        [SYS_trace] "trace",
+};
 void
 syscall(void)
 {
@@ -143,4 +156,16 @@ syscall(void)
             p->pid, p->name, num);
     p->trapframe->a0 = -1;
   }
+  char arguments_str [] = "NULL";
+  // get syscall args for  FORK, KILL, and SBRK
+  if((num == SYS_fork) | (num == SYS_kill) | (num == SYS_sbrk)){
+      argstr(num,arguments_str, 256);
+  }
+
+  // if process p has mask then print it's trace
+  // TODO: need to understand why trapframe->a0, need to print the syscall arguments for FORK, KILL, and SBRK or null
+    if (p->mask & (1 << num)) {
+        printf("%d: syscall %s %s -> %d\n", p->pid, syscall_names[num], arguments_str
+               ,p->trapframe->a0);
+    }
 }
