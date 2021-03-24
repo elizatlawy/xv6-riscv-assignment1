@@ -37,6 +37,15 @@ sys_wait(void)
     return -1;
   return wait(p);
 }
+int sys_wait_stat(void) {
+    int status;
+    int performance;
+    if (argint(0, &status) < 0)
+        return -1;
+    if (argint(1, &performance) < 0)
+        return -1;
+    return wait_stat((int*)status, (struct perf*) performance);
+}
 
 uint64
 sys_sbrk(void)
