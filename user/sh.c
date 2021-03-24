@@ -88,6 +88,7 @@ runcmd(struct cmd *cmd) {
             if (fd == -1){
                 fprintf(2, "fd failed\n", ecmd->argv[0]);
             }
+            //
             if (myCmd[0] != '/'){
                 // looping over all paths in path file and try to exec in each one
                 while (read(fd,c,1) != 0){
