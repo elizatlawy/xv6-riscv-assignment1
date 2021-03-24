@@ -157,10 +157,10 @@ syscall(void)
     p->trapframe->a0 = -1;
   }
   char arguments_str [] = "NULL";
-  // get syscall args for  FORK, KILL, and SBRK
-  if((num == SYS_fork) | (num == SYS_kill) | (num == SYS_sbrk)){
-      argstr(num,arguments_str, 256);
-  }
+//  // get syscall args for  FORK, KILL, and SBRK
+//  if((num == SYS_fork) | (num == SYS_kill) | (num == SYS_sbrk)){
+//      argstr(num,arguments_str, 256);
+//  }
 
   // if process p has mask then print it's trace
   // TODO: need to understand why trapframe->a0, need to print the syscall arguments for FORK, KILL, and SBRK or null
