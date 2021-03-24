@@ -167,7 +167,7 @@ syscall(void) {
     int arg = 0;
     // get syscall args for  FORK, KILL, and SBRK
     if ((num == SYS_fork) | (num == SYS_kill) | (num == SYS_sbrk)) {
-        argint(0,&arg); // get the first arg of the syscall
+        arg = p->trapframe->a0;; // get the first arg of the syscall
     }
     if (num > 0 && num < NELEM(syscalls) && syscalls[num]) {
         p->trapframe->a0 = syscalls[num]();
