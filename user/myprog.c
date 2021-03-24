@@ -5,6 +5,7 @@
 
 
 int main(int argc, char **argv) {
+    // test new branch push
     fprintf(1, "starting mask for: SYS_fork \n");
     int mask = ((1 << SYS_fork) | (1 << SYS_kill) | (1 << SYS_sbrk) | (1 << SYS_exit) | (1 << SYS_wait));
     trace(mask, 0);
