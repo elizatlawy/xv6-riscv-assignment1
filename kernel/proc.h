@@ -80,13 +80,7 @@ struct trapframe {
     /* 280 */ uint64 t6;
 };
 
-struct perf {
-    int ctime;
-    int ttime;
-    int stime;
-    int retime;
-    int rutime;
-};
+
 
 enum procstate {
     UNUSED, USED, SLEEPING, RUNNABLE, RUNNING, ZOMBIE
@@ -116,9 +110,5 @@ struct proc {
     struct inode *cwd;           // Current directory
     char name[16];               // Process name (debugging)
     int mask;                    // Process mask for trace syscall
-    int ctime;                   // Procedure creation tick
-    int ttime;                   // Procedure termination tick
-    int stime;                   // Procedure total SLEEPING tick count
-    int retime;                  // Procedure total READY (RUNNABLE) tick count
-    int rutime;                  // Procedure total RUNNING tick count
+    struct perf perf;            // Process performance struct
 };

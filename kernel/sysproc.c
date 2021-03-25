@@ -37,14 +37,14 @@ uint64 sys_wait(void)
   return wait(p);
 }
 uint64 sys_wait_stat(void) {
-    uint64 addr;
+    uint64 status;
     uint64 performance;
     int pid;
-    if (argaddr(0, &addr) < 0)
+    if (argaddr(0, &status) < 0)
         return -1;
     if (argaddr(1, &performance) < 0)
         return -1;
-    pid = wait_stat(addr,  (struct perf*) performance);
+    pid = wait_stat(status, (struct perf*) performance);
     return pid;
 }
 

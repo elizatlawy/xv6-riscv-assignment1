@@ -158,7 +158,7 @@ kerneltrap() {
 
 void
 clockintr() {
-//    inc_stat_ticks();
+    inc_stat_ticks();
     acquire(&tickslock);
     ticks++;
     wakeup(&ticks);

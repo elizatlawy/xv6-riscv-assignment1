@@ -50,11 +50,11 @@ void inc_stat_ticks(void) {
         if (p != 0) { // check if p is not null
             acquire(&p->lock);
             if (p->state == SLEEPING)
-                p->stime++;
+                p->perf.stime++;
             if (p->state == RUNNABLE)
-                p->retime++;
+                p->perf.retime++;
             if (p->state == RUNNING)
-                p->rutime++;
+                p->perf.rutime++;
             release(&p->lock);
         }
     }
@@ -140,7 +140,7 @@ allocproc(void) {
     found:
     p->pid = allocpid();
     p->state = USED;
-    p->ctime = get_ticks();
+    p->perf.ctime = get_ticks();
 
     // Allocate a trapframe page.
     if ((p->trapframe = (struct trapframe *) kalloc()) == 0) {
@@ -184,11 +184,11 @@ freeproc(struct proc *p) {
     p->chan = 0;
     p->killed = 0;
     p->xstate = 0;
-    p->stime = 0;
-    p->ttime = 0;
-    p->ctime = 0;
-    p->retime = 0;
-    p->rutime = 0;
+    p->perf.stime = 0;
+    p->perf.ttime = 0;
+    p->perf.ctime = 0;
+    p->perf.retime = 0;
+    p->perf.rutime = 0;
     p->state = UNUSED;
 }
 
@@ -389,7 +389,7 @@ exit(int status) {
     wakeup(p->parent);
 
     acquire(&p->lock);
-    p->ttime = get_ticks();
+    p->perf.ttime = get_ticks();
 
     p->xstate = status;
     p->state = ZOMBIE;
@@ -450,7 +450,7 @@ int wait(uint64 addr) {
 // Ass1, task3
 // Wait for a child process to exit and return its pid.
 // Return -1 if this process has no children.
-int wait_stat(uint64 addr, struct perf *perfPtr) {
+int wait_stat(uint64 addr, struct perf *performance) {
     struct proc *np;
     int havekids, pid;
     struct proc *p = myproc();
@@ -464,13 +464,7 @@ int wait_stat(uint64 addr, struct perf *perfPtr) {
                 acquire(&np->lock);
                 havekids = 1;
                 if (np->state == ZOMBIE) {
-                    // Found one.
-                    perfPtr->stime = np->stime;
-                    perfPtr->rutime = np->rutime;
-                    perfPtr->retime = np->retime;
-                    perfPtr->ttime = np->ttime;
-                    perfPtr->ctime = np->ctime;
-
+                    copyout(p->pagetable, (uint64) performance,(char *) &np->perf,sizeof(np->perf));
                     pid = np->pid;
                     if (addr != 0 && copyout(p->pagetable, addr, (char *) &np->xstate,
                                              sizeof(np->xstate)) < 0) {
