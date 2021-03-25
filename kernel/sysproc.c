@@ -29,26 +29,26 @@ sys_fork(void)
   return fork();
 }
 
-uint64
-sys_wait(void)
+uint64 sys_wait(void)
 {
   uint64 p;
   if(argaddr(0, &p) < 0)
     return -1;
   return wait(p);
 }
-int sys_wait_stat(void) {
-    int status;
-    int performance;
-    if (argint(0, &status) < 0)
+uint64 sys_wait_stat(void) {
+    uint64 addr;
+    uint64 performance;
+    int pid;
+    if (argaddr(0, &addr) < 0)
         return -1;
-    if (argint(1, &performance) < 0)
+    if (argaddr(1, &performance) < 0)
         return -1;
-    return wait_stat((int*)status, (struct perf*) performance);
+    pid = wait_stat(addr,  (struct perf*) performance);
+    return pid;
 }
 
-uint64
-sys_sbrk(void)
+uint64 sys_sbrk(void)
 {
   int addr;
   int n;
@@ -110,7 +110,9 @@ uint64
 sys_trace(void)
 {
     int mask;
-    if (argint(0, &mask) < 0) return -1;
+    if (argint(0, &mask) < 0){
+        return -1;
+    }
     myproc()->mask = mask;
     return 0;
 }

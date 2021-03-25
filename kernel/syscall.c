@@ -121,6 +121,8 @@ extern uint64 sys_uptime(void);
 
 extern uint64 sys_trace(void);
 
+extern uint64 sys_wait_stat(void);
+
 static uint64 (*syscalls[])(void) = {
         [SYS_fork]    sys_fork,
         [SYS_exit]    sys_exit,
@@ -144,6 +146,7 @@ static uint64 (*syscalls[])(void) = {
         [SYS_mkdir]   sys_mkdir,
         [SYS_close]   sys_close,
         [SYS_trace]   sys_trace,
+        [SYS_wait_stat]     sys_wait_stat,
 };
 
 // for syscall trace - an array of all the syscall names
@@ -155,7 +158,7 @@ static char *syscall_names[] = {
         [SYS_sleep] "sleep", [SYS_uptime] "uptime", [SYS_open] "open",
         [SYS_write] "write", [SYS_mknod] "mknod", [SYS_unlink] "unlink",
         [SYS_link] "link", [SYS_mkdir] "mkdir", [SYS_close] "close",
-        [SYS_trace] "trace",
+        [SYS_trace] "trace", [SYS_wait_stat] "sys_wait_stat",
 };
 
 void
@@ -179,11 +182,10 @@ syscall(void) {
     // if process p has mask then print it's trace
     if (p->mask & (1 << num)) {
         int ret_val = p->trapframe->a0;
-        if ((num == SYS_fork) | (num == SYS_kill) | (num == SYS_sbrk)){
-            printf("%d: A syscall %s %d -> %d\n", p->pid, syscall_names[num], arg, ret_val);
-        }
-        else{
-            printf("%d: B syscall %s -> %d\n", p->pid, syscall_names[num], ret_val);
+        if ((num == SYS_fork) | (num == SYS_kill) | (num == SYS_sbrk)) {
+            printf("%d: syscall %s %d -> %d\n", p->pid, syscall_names[num], arg, ret_val);
+        } else {
+            printf("%d: syscall %s -> %d\n", p->pid, syscall_names[num], ret_val);
         }
     }
 }

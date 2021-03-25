@@ -86,7 +86,6 @@ struct perf {
     int stime;
     int retime;
     int rutime;
-    float bursttime;
 };
 
 enum procstate {
@@ -117,6 +116,9 @@ struct proc {
     struct inode *cwd;           // Current directory
     char name[16];               // Process name (debugging)
     int mask;                    // Process mask for trace syscall
-    struct perf *performance;    // Performance statistics
-
+    int ctime;                   // Procedure creation tick
+    int ttime;                   // Procedure termination tick
+    int stime;                   // Procedure total SLEEPING tick count
+    int retime;                  // Procedure total READY (RUNNABLE) tick count
+    int rutime;                  // Procedure total RUNNING tick count
 };

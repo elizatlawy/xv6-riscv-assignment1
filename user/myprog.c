@@ -3,6 +3,13 @@
 #include "kernel/fcntl.h"
 #include "kernel/syscall.h"
 
+struct perf {
+    int ctime;
+    int ttime;
+    int stime;
+    int retime;
+    int rutime;
+};
 
 int main(int argc, char **argv) {
     // test new branch push
@@ -17,7 +24,16 @@ int main(int argc, char **argv) {
         int status;
         sleep(10);
         kill(pid);
-        wait(&status);
+        struct perf perf;
+        perf.ctime = 0;
+        perf.stime = 0;
+        perf.ttime = 0;
+        perf.retime = 0;
+        perf.rutime = 0;
+//        wait(&status);
+        fprintf(2, "perf addr: %d\n", &perf);
+        wait_stat(&status, &perf);
+        fprintf(2, "ctime: %d\n", perf.ctime);
         fprintf(2, "Child %d finshed with exit status %d\n", pid, status);
     } else { // child
         int my_pid = getpid();
