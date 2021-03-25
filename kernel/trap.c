@@ -8,6 +8,7 @@
 
 struct spinlock tickslock;
 uint ticks;
+uint q_ticks;
 
 extern void inc_stat_ticks(void);
 
@@ -161,7 +162,11 @@ clockintr() {
     inc_stat_ticks();
     acquire(&tickslock);
     ticks++;
-    wakeup(&ticks);
+    q_ticks++;
+    if (q_ticks == QUANTUM){
+        q_ticks = 0;
+        wakeup(&ticks);
+    }
     release(&tickslock);
 }
 

@@ -501,12 +501,10 @@ int wait_stat(uint64 addr, struct perf *performance) {
 void scheduler(void) {
     struct proc *p;
     struct cpu *c = mycpu();
-
     c->proc = 0;
     for (;;) {
         // Avoid deadlock by ensuring that devices can interrupt.
         intr_on();
-
         for (p = proc; p < &proc[NPROC]; p++) {
             acquire(&p->lock);
             if (p->state == RUNNABLE) {
@@ -516,7 +514,6 @@ void scheduler(void) {
                 p->state = RUNNING;
                 c->proc = p;
                 swtch(&c->context, &p->context);
-
                 // Process is done running for now.
                 // It should have changed its p->state before coming back.
                 c->proc = 0;
@@ -617,7 +614,6 @@ sleep(void *chan, struct spinlock *lk) {
 void
 wakeup(void *chan) {
     struct proc *p;
-
     for (p = proc; p < &proc[NPROC]; p++) {
         if (p != myproc()) {
             acquire(&p->lock);
