@@ -13,7 +13,9 @@ int main(int argc, char **argv) {
 //    trace(mask, 2);
     int pid = -1;
     for(int i = 0; i < 10; i++){
-        pid = fork();
+        if(pid != 0){
+            pid = fork();
+        }
     }
     if (pid != 0) { // parent
         int status;
@@ -23,18 +25,20 @@ int main(int argc, char **argv) {
         perf.ttime = 0;
         perf.retime = 0;
         perf.rutime = 0;
-        wait_stat(&status, &perf);
-        fprintf(2, "ctime: %d\n", perf.ctime);
-        fprintf(2, "stime: %d\n", perf.stime);
-        fprintf(2, "ttime: %d\n", perf.ttime);
-        fprintf(2, "retime: %d\n", perf.retime);
-        fprintf(2, "rutime: %d\n", perf.rutime);
-        fprintf(2, "Child %d finshed with exit status %d\n", pid, status);
+        for(int i = 0; i < 10; i++){
+            wait_stat(&status, &perf);
+            fprintf(2, "ctime: %d\n", perf.ctime);
+            fprintf(2, "stime: %d\n", perf.stime);
+            fprintf(2, "ttime: %d\n", perf.ttime);
+            fprintf(2, "retime: %d\n", perf.retime);
+            fprintf(2, "rutime: %d\n", perf.rutime);
+            fprintf(2, "Child %d finshed with exit status %d\n", pid, status);
+            }
     } else { // child
         int my_pid = getpid();
         fprintf(2, "Child %d is running\n", my_pid);
-        for ( int i = 0; i < 1000000; i++);
-        fprintf(2, "Child %d is finished runinng\n", my_pid);
+        for ( int i = 0; i < 100000; i++);
+//        fprintf(2, "Child %d is finished runinng\n", my_pid);
     }
     exit(0);
 }

@@ -526,7 +526,6 @@ void scheduler(void) {
 #endif
 #ifdef FCFS // First come first serve scheduler
         struct proc *min_proc = 0;
-        acquire(&min_proc->lock);
         for (p = proc; p < &proc[NPROC]; p++) {
             acquire(&p->lock);
             if (p->state == RUNNABLE){
@@ -534,9 +533,15 @@ void scheduler(void) {
                     min_proc = p;
                 }
                 else if(p->fcfs_time < min_proc->fcfs_time){
+                    release(&min_proc->lock);
                     min_proc = p;
                 }
-            release(&p->lock);
+                else{
+                    release(&p->lock);
+                }
+            }
+            else{ // p not RUNNABLE release him
+                 release(&p->lock);
             }
         }
         // Switch to chosen process.  It is the process's job
@@ -549,8 +554,8 @@ void scheduler(void) {
             // Process is done running for now.
             // It should have changed its p->state before coming back.
             c->proc = 0;
+            release(&min_proc->lock);
         }
-        release(&min_proc->lock);
 #endif
     } // end of inf loop
 }
