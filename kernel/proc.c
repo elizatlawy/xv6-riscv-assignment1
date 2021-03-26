@@ -266,6 +266,7 @@ userinit(void) {
     p->cwd = namei("/");
 
     p->state = RUNNABLE;
+    p->fcfs_time = get_ticks();
 
     release(&p->lock);
 }
@@ -337,6 +338,7 @@ fork(void) {
 
     acquire(&np->lock);
     np->state = RUNNABLE;
+    np->fcfs_time = get_ticks();
     release(&np->lock);
 
     return pid;
@@ -464,7 +466,7 @@ int wait_stat(uint64 addr, struct perf *performance) {
                 acquire(&np->lock);
                 havekids = 1;
                 if (np->state == ZOMBIE) {
-                    copyout(p->pagetable, (uint64) performance,(char *) &np->perf,sizeof(np->perf));
+                    copyout(p->pagetable, (uint64) performance, (char *) &np->perf, sizeof(np->perf));
                     pid = np->pid;
                     if (addr != 0 && copyout(p->pagetable, addr, (char *) &np->xstate,
                                              sizeof(np->xstate)) < 0) {
@@ -505,6 +507,7 @@ void scheduler(void) {
     for (;;) {
         // Avoid deadlock by ensuring that devices can interrupt.
         intr_on();
+#ifdef DEFAULT // DEFAULT scheduler code - round-robin
         for (p = proc; p < &proc[NPROC]; p++) {
             acquire(&p->lock);
             if (p->state == RUNNABLE) {
@@ -520,7 +523,36 @@ void scheduler(void) {
             }
             release(&p->lock);
         }
-    }
+#endif
+#ifdef FCFS // First come first serve scheduler
+        struct proc *min_proc = 0;
+        acquire(&min_proc->lock);
+        for (p = proc; p < &proc[NPROC]; p++) {
+            acquire(&p->lock);
+            if (p->state == RUNNABLE){
+                if (min_proc == 0){
+                    min_proc = p;
+                }
+                else if(p->fcfs_time < min_proc->fcfs_time){
+                    min_proc = p;
+                }
+            release(&p->lock);
+            }
+        }
+        // Switch to chosen process.  It is the process's job
+        // to release its lock and then reacquire it
+        // before jumping back to us.
+        if ( min_proc != 0){
+            min_proc->state = RUNNING;
+            c->proc = min_proc;
+            swtch(&c->context, &min_proc->context);
+            // Process is done running for now.
+            // It should have changed its p->state before coming back.
+            c->proc = 0;
+        }
+        release(&min_proc->lock);
+#endif
+    } // end of inf loop
 }
 
 // Switch to scheduler.  Must hold only p->lock
@@ -555,6 +587,7 @@ yield(void) {
     struct proc *p = myproc();
     acquire(&p->lock);
     p->state = RUNNABLE;
+    p->fcfs_time = get_ticks();
     sched();
     release(&p->lock);
 }
@@ -619,6 +652,7 @@ wakeup(void *chan) {
             acquire(&p->lock);
             if (p->state == SLEEPING && p->chan == chan) {
                 p->state = RUNNABLE;
+                p->fcfs_time = get_ticks();
             }
             release(&p->lock);
         }
@@ -639,6 +673,7 @@ kill(int pid) {
             if (p->state == SLEEPING) {
                 // Wake process from sleep().
                 p->state = RUNNABLE;
+                p->fcfs_time = get_ticks();
             }
             release(&p->lock);
             return 0;

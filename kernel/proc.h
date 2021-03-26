@@ -111,4 +111,5 @@ struct proc {
     char name[16];               // Process name (debugging)
     int mask;                    // Process mask for trace syscall
     struct perf perf;            // Process performance struct
+    int fcfs_time;               // time of turning to runnable
 };
