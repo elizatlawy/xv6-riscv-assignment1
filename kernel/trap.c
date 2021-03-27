@@ -76,8 +76,8 @@ usertrap(void) {
     if (p->killed)
         exit(-1);
 
-    // give up the CPU if this is a timer interrupt.
-    if (which_dev == 2){
+    // give up the CPU if this is a timer interrupt & q_ticks >= QUANTUM.
+    if (which_dev == 2 && q_ticks >= QUANTUM){
         yield();
     }
 
@@ -148,7 +148,7 @@ kerneltrap() {
         panic("kerneltrap");
     }
 
-    // give up the CPU if this is a timer interrupt.
+    // give up the CPU if this is a timer interrupt & q_ticks >= QUANTUM.
     if (which_dev == 2 && myproc() != 0 && myproc()->state == RUNNING && q_ticks >= QUANTUM)
         yield();
 
@@ -162,8 +162,8 @@ void
 clockintr() {
     inc_stat_ticks();
     acquire(&tickslock);
-    q_ticks++;
     ticks++;
+    q_ticks++; // count up to QUANTUM and them reset to 1
     if (q_ticks > QUANTUM)
         q_ticks = 1;
     wakeup(&ticks);

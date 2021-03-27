@@ -66,9 +66,9 @@ runcmd(struct cmd *cmd) {
     int fd;
     char c[1];
     char s[512];
-    int stringLoc = 0;
-    char *myCmd;
-    int cmdLoc = 0;
+    int string_index = 0;
+    char *my_cmd;
+    int cmd_index = 0;
 
     if (cmd == 0)
         exit(1);
@@ -79,7 +79,7 @@ runcmd(struct cmd *cmd) {
 
         case EXEC:
             ecmd = (struct execcmd *) cmd;
-            myCmd = ecmd->argv[0];
+            my_cmd = ecmd->argv[0];
             if (ecmd->argv[0] == 0)
                 exit(1);
             exec(ecmd->argv[0], ecmd->argv);
@@ -89,24 +89,24 @@ runcmd(struct cmd *cmd) {
                 fprintf(2, "fd failed\n", ecmd->argv[0]);
             }
             //
-            if (myCmd[0] != '/'){
+            if (my_cmd[0] != '/'){
                 // looping over all paths in path file and try to exec in each one
                 while (read(fd,c,1) != 0){
                     // read the path string
                     if (c[0]!= ':'){
-                        s[stringLoc] = c[0];
-                        stringLoc++;
+                        s[string_index] = c[0];
+                        string_index++;
                     }
                     // end of curr path
                     else{
-                        while(myCmd[cmdLoc] != 0){
-                            s[stringLoc] = myCmd[cmdLoc]; // add the program name to the path name
-                            stringLoc++;
-                            cmdLoc++;
+                        while(my_cmd[cmd_index] != 0){
+                            s[string_index] = my_cmd[cmd_index]; // add the program name to the path name
+                            string_index++;
+                            cmd_index++;
                         }
-                        s[stringLoc] = 0; // add null termination string at the end of the command path
-                        stringLoc = 0;
-                        cmdLoc = 0;
+                        s[string_index] = 0; // add null termination string at the end of the command path
+                        string_index = 0;
+                        cmd_index = 0;
                         exec(s, ecmd->argv); // try to exec with the full path
                     }
                 }
