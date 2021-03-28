@@ -148,6 +148,7 @@ allocproc(void) {
     p->state = USED;
     p->perf.ctime = get_ticks();
     p->perf.bursttime = QUANTUM;
+    p->priority = 3; // NORMAL priority
 
     // Allocate a trapframe page.
     if ((p->trapframe = (struct trapframe *) kalloc()) == 0) {
@@ -198,6 +199,7 @@ freeproc(struct proc *p) {
     p->perf.rutime = 0;
     p->perf.bursttime = 0;
     p->last_rutime_tick = 0;
+    p->priority = 0;
     p->state = UNUSED;
 }
 
@@ -322,8 +324,11 @@ fork(void) {
     }
     np->sz = p->sz;
 
-    // copy prent's trace-mask
+    // copy parent's trace-mask
     np->mask = p->mask;
+
+    // copy parent's priority
+    np->priority = p->priority;
 
     // copy saved user registers.
     *(np->trapframe) = *(p->trapframe);

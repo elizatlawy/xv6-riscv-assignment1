@@ -1,13 +1,16 @@
 #include "kernel/types.h"
 #include "user/user.h"
 #include "kernel/fcntl.h"
-
 //#include "kernel/syscall.h"
 
 void srt_test();
 
 int main(int argc, char **argv) {
-    srt_test();
+    int pid = -1;
+    pid = fork();
+    if(pid ==0){
+        set_priority(5);
+    }
     exit(0);
 }
 
@@ -64,10 +67,10 @@ void srt_test(){
     } else { // child
         int my_pid = getpid();
         fprintf(2, "Child %d is running\n", my_pid);
-        for(int i=0;i<(1000000*getpid());i++){
+        for(int i=0;i<(100*getpid());i++){
         }
         sleep(10);
-        for(int i=0;i<(1000000*getpid());i++) {
+        for(int i=0;i<(100*getpid());i++) {
         }
         fprintf(2, "Child %d is finished runinng\n", my_pid);
     }

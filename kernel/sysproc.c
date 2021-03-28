@@ -106,13 +106,26 @@ sys_uptime(void)
 }
 
 // ass1 - trace syscall
-uint64
-sys_trace(void)
+uint64 sys_trace(void)
 {
     int mask;
     if (argint(0, &mask) < 0){
         return -1;
     }
     myproc()->mask = mask;
+    return 0;
+}
+
+uint64 sys_set_priority(void)
+{
+    int priority;
+    if (argint(0, &priority) < 0){
+        return -1;
+    }
+    if(priority<1 || priority>5)
+        return  -1;
+    printf("priority before changing %d\n", myproc()->priority);
+    myproc()->priority = priority;
+    printf("priority after changing %d\n", myproc()->priority);
     return 0;
 }

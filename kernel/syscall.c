@@ -123,6 +123,8 @@ extern uint64 sys_trace(void);
 
 extern uint64 sys_wait_stat(void);
 
+extern uint64 sys_set_priority(void);
+
 static uint64 (*syscalls[])(void) = {
         [SYS_fork]    sys_fork,
         [SYS_exit]    sys_exit,
@@ -147,6 +149,8 @@ static uint64 (*syscalls[])(void) = {
         [SYS_close]   sys_close,
         [SYS_trace]   sys_trace,
         [SYS_wait_stat]     sys_wait_stat,
+        [SYS_set_priority]  sys_set_priority,
+
 };
 
 // for syscall trace - an array of all the syscall names
@@ -158,7 +162,7 @@ static char *syscall_names[] = {
         [SYS_sleep] "sleep", [SYS_uptime] "uptime", [SYS_open] "open",
         [SYS_write] "write", [SYS_mknod] "mknod", [SYS_unlink] "unlink",
         [SYS_link] "link", [SYS_mkdir] "mkdir", [SYS_close] "close",
-        [SYS_trace] "trace", [SYS_wait_stat] "sys_wait_stat",
+        [SYS_trace] "trace", [SYS_wait_stat] "wait_stat", [SYS_set_priority] "set_priority"
 };
 
 void
