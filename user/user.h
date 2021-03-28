@@ -26,7 +26,7 @@ int sleep(int);
 int uptime(void);
 void trace(int mask,int pid);
 int wait_stat(int*, struct perf *);
-int set_priority(int priority);
+int set_priority(int);
 
 
 // ulib.c

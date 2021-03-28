@@ -484,6 +484,7 @@ int wait_stat(uint64 addr, struct perf *performance) {
                 acquire(&np->lock);
                 havekids = 1;
                 if (np->state == ZOMBIE) {
+                    // copy the child's process performance struct
                     copyout(p->pagetable, (uint64) performance, (char *) &np->perf, sizeof(np->perf));
                     pid = np->pid;
                     if (addr != 0 && copyout(p->pagetable, addr, (char *) &np->xstate,

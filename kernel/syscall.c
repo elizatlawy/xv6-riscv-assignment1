@@ -149,7 +149,7 @@ static uint64 (*syscalls[])(void) = {
         [SYS_close]   sys_close,
         [SYS_trace]   sys_trace,
         [SYS_wait_stat]     sys_wait_stat,
-        [SYS_set_priority]  sys_set_priority,
+        [SYS_set_priority]  sys_set_priority
 
 };
 

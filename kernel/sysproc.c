@@ -122,10 +122,10 @@ uint64 sys_set_priority(void)
     if (argint(0, &priority) < 0){
         return -1;
     }
-    if(priority<1 || priority>5)
+    if(priority<1 || priority>3)
         return  -1;
-    printf("priority before changing %d\n", myproc()->priority);
+    printf("priority of %d before changing %d\n", myproc()->pid, myproc()->priority);
     myproc()->priority = priority;
-    printf("priority after changing %d\n", myproc()->priority);
+    printf("priority of %d after changing %d\n",myproc()->pid, myproc()->priority);
     return 0;
 }
