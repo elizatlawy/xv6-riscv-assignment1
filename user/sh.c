@@ -85,37 +85,35 @@ runcmd(struct cmd *cmd) {
             exec(ecmd->argv[0], ecmd->argv);
             // if exec fails, try to search the program in path file
             fd = open("/path",O_RDONLY);
-            if (fd == -1){
-                fprintf(2, "fd failed\n", ecmd->argv[0]);
-            }
-            //
-            if (my_cmd[0] != '/'){
-                // looping over all paths in path file and try to exec in each one
-                while (read(fd,c,1) != 0){
-                    // read the path string
-                    if (c[0]!= ':'){
-                        s[string_index] = c[0];
-                        string_index++;
-                    }
-                    // end of curr path
-                    else{
-                        while(my_cmd[cmd_index] != 0){
-                            s[string_index] = my_cmd[cmd_index]; // add the program name to the path name
+            if (fd != -1) { // try to search in path only if path file exist
+                //
+                if (my_cmd[0] != '/') {
+                    // looping over all paths in path file and try to exec in each one
+                    while (read(fd, c, 1) != 0) {
+                        // read the path string
+                        if (c[0] != ':') {
+                            s[string_index] = c[0];
                             string_index++;
-                            cmd_index++;
                         }
-                        s[string_index] = 0; // add null termination string at the end of the command path
-                        string_index = 0;
-                        cmd_index = 0;
-                        exec(s, ecmd->argv); // try to exec with the full path
+                            // end of curr path
+                        else {
+                            while (my_cmd[cmd_index] != 0) {
+                                s[string_index] = my_cmd[cmd_index]; // add the program name to the path name
+                                string_index++;
+                                cmd_index++;
+                            }
+                            s[string_index] = 0; // add null termination string at the end of the command path
+                            string_index = 0;
+                            cmd_index = 0;
+                            exec(s, ecmd->argv); // try to exec with the full path
+                        }
                     }
+                    fprintf(2, "exec %s failed\n", ecmd->argv[0]);
+                } else {
+                    fprintf(2, "exec %s failed\n", ecmd->argv[0]);
                 }
-                fprintf(2, "exec %s failed\n", ecmd->argv[0]);
+                close(fd);
             }
-            else{
-                fprintf(2, "exec %s failed\n", ecmd->argv[0]);
-            }
-            close(fd);
             break;
 
         case REDIR:
