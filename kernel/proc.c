@@ -107,6 +107,12 @@ int get_ticks(void) {
     return ticks;
 }
 
+void update_bursttime(){
+    struct proc* p = myproc();
+    int last_rutime = get_ticks() - p->last_rutime_tick;
+    p->perf.bursttime = (ALPHA*last_rutime) + ((1-ALPHA)*p->perf.bursttime);
+}
+
 int
 allocpid() {
     int pid;
@@ -141,6 +147,7 @@ allocproc(void) {
     p->pid = allocpid();
     p->state = USED;
     p->perf.ctime = get_ticks();
+    p->perf.bursttime = QUANTUM;
 
     // Allocate a trapframe page.
     if ((p->trapframe = (struct trapframe *) kalloc()) == 0) {
@@ -189,6 +196,8 @@ freeproc(struct proc *p) {
     p->perf.ctime = 0;
     p->perf.retime = 0;
     p->perf.rutime = 0;
+    p->perf.bursttime = 0;
+    p->last_rutime_tick = 0;
     p->state = UNUSED;
 }
 
@@ -266,7 +275,9 @@ userinit(void) {
     p->cwd = namei("/");
 
     p->state = RUNNABLE;
+#ifdef FCFS
     p->fcfs_time = get_ticks();
+#endif
 
     release(&p->lock);
 }
@@ -338,7 +349,9 @@ fork(void) {
 
     acquire(&np->lock);
     np->state = RUNNABLE;
+#ifdef FCFS
     np->fcfs_time = get_ticks();
+#endif
     release(&np->lock);
 
     return pid;
@@ -545,11 +558,46 @@ void scheduler(void) {
             }
         }
         // Switch to chosen process.  It is the process's job
-        // to release its lock and then reacquire it
+        // to release its lock and then re-acquire it
         // before jumping back to us.
         if ( min_proc != 0){
             min_proc->state = RUNNING;
             c->proc = min_proc;
+            swtch(&c->context, &min_proc->context);
+            // Process is done running for now.
+            // It should have changed its p->state before coming back.
+            c->proc = 0;
+            release(&min_proc->lock);
+        }
+#endif
+#ifdef SRT // Shortest Remaining Time scheduler
+        struct proc *min_proc = 0;
+        for (p = proc; p < &proc[NPROC]; p++) {
+            acquire(&p->lock);
+            if (p->state == RUNNABLE){
+                if (min_proc == 0){
+                    min_proc = p;
+                }
+                else if(p->perf.bursttime < min_proc->perf.bursttime){
+                    release(&min_proc->lock);
+                    min_proc = p;
+                }
+                else{
+                    release(&p->lock);
+                }
+            }
+            else{
+                release(&p->lock);
+            }
+        }
+        // Switch to chosen process.  It is the process's job
+        // to release its lock and then reacquire it
+        // before jumping back to us.
+        if ( min_proc != 0){
+            printf("process pid %d with bursttime %d\n",min_proc->pid,min_proc->perf.bursttime);
+            min_proc->state = RUNNING;
+            c->proc = min_proc;
+            p->last_rutime_tick = get_ticks();
             swtch(&c->context, &min_proc->context);
             // Process is done running for now.
             // It should have changed its p->state before coming back.
@@ -592,7 +640,12 @@ yield(void) {
     struct proc *p = myproc();
     acquire(&p->lock);
     p->state = RUNNABLE;
+#ifdef FCFS
     p->fcfs_time = get_ticks();
+#endif
+#ifdef SRT
+    update_bursttime();
+#endif
     sched();
     release(&p->lock);
 }
@@ -636,6 +689,9 @@ sleep(void *chan, struct spinlock *lk) {
     // Go to sleep.
     p->chan = chan;
     p->state = SLEEPING;
+#ifdef SRT
+    update_bursttime();
+#endif
 
     sched();
 
@@ -657,7 +713,9 @@ wakeup(void *chan) {
             acquire(&p->lock);
             if (p->state == SLEEPING && p->chan == chan) {
                 p->state = RUNNABLE;
+#ifdef FCFS
                 p->fcfs_time = get_ticks();
+#endif
             }
             release(&p->lock);
         }
@@ -678,7 +736,9 @@ kill(int pid) {
             if (p->state == SLEEPING) {
                 // Wake process from sleep().
                 p->state = RUNNABLE;
+#ifdef FCFS
                 p->fcfs_time = get_ticks();
+#endif
             }
             release(&p->lock);
             return 0;
