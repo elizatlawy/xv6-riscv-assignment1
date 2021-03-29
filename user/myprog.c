@@ -6,14 +6,12 @@
 void srt_test();
 
 void trace_tests();
-
 void fcfs_test();
 
 void cfsd_test();
 
 
 int main(int argc, char **argv) {
-//    fcfs_test();
     srt_test();
     exit(0);
 }
@@ -59,7 +57,7 @@ void srt_test() {
                 printf("running time:     %d\n", perf.rutime);
                 printf("runnable time:    %d\n", perf.retime);
                 printf("sleeping time:    %d\n", perf.stime);
-                printf("average_bursttime:    %d\n", perf.average_bursttime);
+                printf("average_bursttime:    %d\n", perf.bursttime);
             }
         }
     } else { // child
@@ -104,7 +102,7 @@ void cfsd_test(){
                 printf("running time:     %d\n", perf.rutime);
                 printf("runnable time:    %d\n", perf.retime);
                 printf("sleeping time:    %d\n", perf.stime);
-                printf("average_bursttime:    %d\n", perf.average_bursttime);
+                printf("average_bursttime:    %d\n", perf.bursttime);
             }
         }
     } else { // child

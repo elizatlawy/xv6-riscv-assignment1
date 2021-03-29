@@ -53,10 +53,8 @@ void inc_stat_ticks(void) {
                 p->perf.stime++;
             if (p->state == RUNNABLE)
                 p->perf.retime++;
-            if (p->state == RUNNING){
-                p->last_rutime++;
+            if (p->state == RUNNING)
                 p->perf.rutime++;
-            }
             release(&p->lock);
         }
     }
@@ -108,11 +106,10 @@ int get_ticks(void) {
     return ticks;
 }
 
-void update_avrg_bursttime() {
-    struct proc *p = myproc();
-//    int curr_burst = get_ticks() - p->last_rutime;
-    p->perf.average_bursttime = (ALPHA * p->last_rutime) + ((100 - ALPHA) * p->perf.average_bursttime) / 100;
-    p->last_rutime = 0; // reset last run time
+void update_bursttime(){
+    struct proc* p = myproc();
+    int last_rutime = get_ticks() - p->last_rutime_tick;
+    p->perf.bursttime = ((ALPHA*last_rutime) + ((100-ALPHA)*p->perf.bursttime)/100);
 }
 
 int calculate_ratio(struct proc *p) {
@@ -155,7 +152,7 @@ allocproc(void) {
     p->pid = allocpid();
     p->state = USED;
     p->perf.ctime = get_ticks();
-    p->perf.average_bursttime = QUANTUM * 100;
+    p->perf.bursttime = QUANTUM;
     p->decay_factor = NORMAL;
 
     // Allocate a trapframe page.
@@ -205,9 +202,8 @@ freeproc(struct proc *p) {
     p->perf.ctime = 0;
     p->perf.retime = 0;
     p->perf.rutime = 0;
-    p->perf.average_bursttime = 0;
-//    p->last_rutime_tick = 0;
-    p->last_rutime = 0;
+    p->perf.bursttime = 0;
+    p->last_rutime_tick = 0;
     p->decay_factor = 0;
     p->state = UNUSED;
 }
@@ -594,7 +590,7 @@ void scheduler(void) {
                 if (min_proc == 0){
                     min_proc = p;
                 }
-                else if(p->perf.average_bursttime < min_proc->perf.average_bursttime){
+                else if(p->perf.bursttime < min_proc->perf.bursttime){
                     release(&min_proc->lock);
                     min_proc = p;
                 }
@@ -610,10 +606,10 @@ void scheduler(void) {
         // to release its lock and then reacquire it
         // before jumping back to us.
         if ( min_proc != 0){
-//            printf("process pid %d with average_bursttime %d\n",min_proc->pid,min_proc->perf.average_bursttime);
+//            printf("process pid %d with bursttime %d\n",min_proc->pid,min_proc->perf.bursttime);
             min_proc->state = RUNNING;
             c->proc = min_proc;
-//            p->last_rutime_tick = get_ticks();
+            p->last_rutime_tick = get_ticks();
             swtch(&c->context, &min_proc->context);
             // Process is done running for now.
             // It should have changed its p->state before coming back.
@@ -695,7 +691,7 @@ yield(void) {
 //    printf("ticks num yield: %d\n", get_ticks());
 #endif
 #ifdef SRT
-    update_avrg_bursttime();
+    update_bursttime();
 #endif
     sched();
     release(&p->lock);
@@ -741,7 +737,7 @@ sleep(void *chan, struct spinlock *lk) {
     p->chan = chan;
     p->state = SLEEPING;
 #ifdef SRT
-    update_avrg_bursttime();
+    update_bursttime();
 #endif
 
     sched();
