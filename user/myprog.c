@@ -67,10 +67,10 @@ void srt_test() {
         fprintf(2, "Child %d is running\n", my_pid);
         int iter = getpid();
         while (iter > 0) { // 10 iter of for + sleep.
-            for (int i = 0; i < (10 * my_pid); i++) {
+            for (int i = 0; i < (1000000000 * my_pid); i++) {
             }
             sleep(my_pid);
-            for (int i = 0; i < (10 * my_pid); i++) {
+            for (int i = 0; i < (1000000000 * my_pid); i++) {
             }
             iter--;
         }

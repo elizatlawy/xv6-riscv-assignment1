@@ -53,8 +53,10 @@ void inc_stat_ticks(void) {
                 p->perf.stime++;
             if (p->state == RUNNABLE)
                 p->perf.retime++;
-            if (p->state == RUNNING)
+            if (p->state == RUNNING){
+                p->last_rutime++;
                 p->perf.rutime++;
+            }
             release(&p->lock);
         }
     }
@@ -108,8 +110,9 @@ int get_ticks(void) {
 
 void update_avrg_bursttime() {
     struct proc *p = myproc();
-    int curr_burst = get_ticks() - p->last_rutime_tick;
-    p->perf.average_bursttime = (ALPHA * curr_burst) + ((100 - ALPHA) * p->perf.average_bursttime) / 100;
+//    int curr_burst = get_ticks() - p->last_rutime;
+    p->perf.average_bursttime = (ALPHA * p->last_rutime) + ((100 - ALPHA) * p->perf.average_bursttime) / 100;
+    p->last_rutime = 0; // reset last run time
 }
 
 int calculate_ratio(struct proc *p) {
@@ -203,7 +206,8 @@ freeproc(struct proc *p) {
     p->perf.retime = 0;
     p->perf.rutime = 0;
     p->perf.average_bursttime = 0;
-    p->last_rutime_tick = 0;
+//    p->last_rutime_tick = 0;
+    p->last_rutime = 0;
     p->decay_factor = 0;
     p->state = UNUSED;
 }
@@ -609,7 +613,7 @@ void scheduler(void) {
 //            printf("process pid %d with average_bursttime %d\n",min_proc->pid,min_proc->perf.average_bursttime);
             min_proc->state = RUNNING;
             c->proc = min_proc;
-            p->last_rutime_tick = get_ticks();
+//            p->last_rutime_tick = get_ticks();
             swtch(&c->context, &min_proc->context);
             // Process is done running for now.
             // It should have changed its p->state before coming back.

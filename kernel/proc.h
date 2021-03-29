@@ -81,7 +81,6 @@ struct trapframe {
 };
 
 
-
 enum procstate {
     UNUSED, USED, SLEEPING, RUNNABLE, RUNNING, ZOMBIE
 };
@@ -112,6 +111,7 @@ struct proc {
     int mask;                    // Process mask for trace syscall
     struct perf perf;            // Process performance struct
     int fcfs_time;               // time of turning to runnable
-    int last_rutime_tick;        // the tick when the process start running in the last time
+//    int last_rutime_tick;        // the tick when the process start running in the last time
+    int last_rutime;            //  the total time the process spent in the last RUNNING state
     int decay_factor;            // 1-highest priority, 5-lowest priority
 };
