@@ -8,12 +8,10 @@ void trace_tests();
 
 int main(int argc, char **argv) {
     set_priority(2);
-//    trace_tests();
     int pid = -1;
     pid = fork();
     if(pid == 0){
-        set_priority(1);
-//        fprintf(2,"%d",p);
+        exec("ls",argv);
     }
     exit(0);
 }

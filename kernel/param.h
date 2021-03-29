@@ -11,5 +11,10 @@
 #define NBUF         (MAXOPBLOCKS*3)  // size of disk block cache
 #define FSSIZE       1000  // size of file system in blocks
 #define MAXPATH      128   // maximum file path name
-#define QUANTUM      5     // time measured as 5 clock ticks - for ass1, Task3
-#define ALPHA        1    // alpha parameter for srt scheduler
+#define QUANTUM      5   // time measured as 5 clock ticks - for ass1, Task3
+#define ALPHA        1   // alpha parameter for srt scheduler
+#define TESTHIGH     20  // decay factor of priority 1
+#define HIGH         75 // decay factor of priority 2
+#define NORMAL       100    // decay factor of priority 3
+#define LOW          125  // decay factor of priority 4
+#define TESTLOW      500  // decay factor of priority 5

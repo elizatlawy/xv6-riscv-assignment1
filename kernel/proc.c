@@ -113,6 +113,13 @@ void update_bursttime(){
     p->perf.bursttime = (ALPHA*last_rutime) + ((1-ALPHA)*p->perf.bursttime);
 }
 
+int calculate_ratio(struct proc* p){
+    if(p->perf.rutime+p->perf.stime == 0)
+        return 0;
+    int ratio = (p->perf.rutime*p->decay_factor) / (p->perf.rutime+p->perf.stime);
+    return ratio;
+}
+
 int
 allocpid() {
     int pid;
@@ -148,7 +155,7 @@ allocproc(void) {
     p->state = USED;
     p->perf.ctime = get_ticks();
     p->perf.bursttime = QUANTUM;
-    p->priority = 3; // NORMAL priority
+    p->decay_factor = NORMAL;
 
     // Allocate a trapframe page.
     if ((p->trapframe = (struct trapframe *) kalloc()) == 0) {
@@ -199,7 +206,7 @@ freeproc(struct proc *p) {
     p->perf.rutime = 0;
     p->perf.bursttime = 0;
     p->last_rutime_tick = 0;
-    p->priority = 0;
+    p->decay_factor = 0;
     p->state = UNUSED;
 }
 
@@ -328,7 +335,7 @@ fork(void) {
     np->mask = p->mask;
 
     // copy parent's priority
-    np->priority = p->priority;
+    np->decay_factor = p->decay_factor;
 
     // copy saved user registers.
     *(np->trapframe) = *(p->trapframe);
@@ -567,6 +574,7 @@ void scheduler(void) {
         // to release its lock and then re-acquire it
         // before jumping back to us.
         if ( min_proc != 0){
+            printf("process pid %d with fcfs_time %d\n",min_proc->pid,min_proc->perf.fcfs_time);
             min_proc->state = RUNNING;
             c->proc = min_proc;
             swtch(&c->context, &min_proc->context);
@@ -604,6 +612,40 @@ void scheduler(void) {
             min_proc->state = RUNNING;
             c->proc = min_proc;
             p->last_rutime_tick = get_ticks();
+            swtch(&c->context, &min_proc->context);
+            // Process is done running for now.
+            // It should have changed its p->state before coming back.
+            c->proc = 0;
+            release(&min_proc->lock);
+        }
+#endif
+#ifdef CFSD // Completely Fair Scheduler with Priority decay
+        struct proc *min_proc = 0;
+        for (p = proc; p < &proc[NPROC]; p++) {
+            acquire(&p->lock);
+            if (p->state == RUNNABLE){
+                if (min_proc == 0){
+                    min_proc = p;
+                }
+                else if(calculate_ratio(p) < calculate_ratio(min_proc)){
+                    release(&min_proc->lock);
+                    min_proc = p;
+                }
+                else{
+                    release(&p->lock);
+                }
+            }
+            else{
+                release(&p->lock);
+            }
+        }
+        // Switch to chosen process.  It is the process's job
+        // to release its lock and then reacquire it
+        // before jumping back to us.
+        if ( min_proc != 0){
+            printf("priority of pid %d is %d\n", min_proc->pid,min_proc->decay_factor);
+            min_proc->state = RUNNING;
+            c->proc = min_proc;
             swtch(&c->context, &min_proc->context);
             // Process is done running for now.
             // It should have changed its p->state before coming back.

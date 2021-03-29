@@ -118,14 +118,17 @@ uint64 sys_trace(void)
 
 uint64 sys_set_priority(void)
 {
+    static int decay_fac_arr[] ={
+            0,TESTHIGH,HIGH,NORMAL,LOW,TESTLOW
+    };
     int priority;
     if (argint(0, &priority) < 0){
         return -1;
     }
-    if(priority<1 || priority>3)
+    if(priority<1 || priority>5)
         return  -1;
-    printf("priority of %d before changing %d\n", myproc()->pid, myproc()->priority);
-    myproc()->priority = priority;
-    printf("priority of %d after changing %d\n",myproc()->pid, myproc()->priority);
+    printf("id: %d, priority before change %d\n", myproc()->pid, myproc()->decay_factor);
+    myproc()->decay_factor = decay_fac_arr[priority];
+    printf("id: %d, priority after change %d\n", myproc()->pid, myproc()->decay_factor);
     return 0;
 }

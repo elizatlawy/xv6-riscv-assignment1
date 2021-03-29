@@ -113,5 +113,5 @@ struct proc {
     struct perf perf;            // Process performance struct
     int fcfs_time;               // time of turning to runnable
     int last_rutime_tick;        // the tick when the process start running in the last time
-    int priority;                // 1-highest priority, 5-lowest priority
+    int decay_factor;            // 1-highest priority, 5-lowest priority
 };
