@@ -102,28 +102,26 @@ myproc(void) {
     return p;
 }
 
-// return number
 int get_ticks(void) {
     return ticks;
 }
 
-void update_avrg_bursttime(){
-    struct proc* p = myproc();
-    int last_rutime = get_ticks() - p->last_rutime_tick;
-    p->perf.average_bursttime = (ALPHA*last_rutime) + ((100-ALPHA)*p->perf.average_bursttime)/100;
+void update_avrg_bursttime() {
+    struct proc *p = myproc();
+    int curr_burst = get_ticks() - p->last_rutime_tick;
+    p->perf.average_bursttime = (ALPHA * curr_burst) + ((100 - ALPHA) * p->perf.average_bursttime) / 100;
 }
 
-int calculate_ratio(struct proc* p){
-    if(p->perf.rutime+p->perf.stime == 0)
+int calculate_ratio(struct proc *p) {
+    if (p->perf.rutime + p->perf.stime == 0)
         return 0;
-    int ratio = (p->perf.rutime*p->decay_factor) / (p->perf.rutime+p->perf.stime);
+    int ratio = (p->perf.rutime * p->decay_factor) / (p->perf.rutime + p->perf.stime);
     return ratio;
 }
 
 int
 allocpid() {
     int pid;
-
     acquire(&pid_lock);
     pid = nextpid;
     nextpid = nextpid + 1;
@@ -608,7 +606,7 @@ void scheduler(void) {
         // to release its lock and then reacquire it
         // before jumping back to us.
         if ( min_proc != 0){
-            printf("process pid %d with average_bursttime %d\n",min_proc->pid,min_proc->perf.average_bursttime);
+//            printf("process pid %d with average_bursttime %d\n",min_proc->pid,min_proc->perf.average_bursttime);
             min_proc->state = RUNNING;
             c->proc = min_proc;
             p->last_rutime_tick = get_ticks();
@@ -643,7 +641,7 @@ void scheduler(void) {
         // to release its lock and then reacquire it
         // before jumping back to us.
         if ( min_proc != 0){
-            printf("priority of pid %d is %d\n", min_proc->pid,min_proc->decay_factor);
+//            printf("priority of pid %d is %d\n", min_proc->pid,min_proc->decay_factor);
             min_proc->state = RUNNING;
             c->proc = min_proc;
             swtch(&c->context, &min_proc->context);
@@ -690,7 +688,7 @@ yield(void) {
     p->state = RUNNABLE;
 #ifdef FCFS
     p->fcfs_time = get_ticks();
-    printf("ticks num yield: %d\n", get_ticks());
+//    printf("ticks num yield: %d\n", get_ticks());
 #endif
 #ifdef SRT
     update_avrg_bursttime();

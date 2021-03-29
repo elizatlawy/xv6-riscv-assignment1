@@ -8,34 +8,31 @@
 #include "proc.h"
 
 uint64
-sys_exit(void)
-{
-  int n;
-  if(argint(0, &n) < 0)
-    return -1;
-  exit(n);
-  return 0;  // not reached
+sys_exit(void) {
+    int n;
+    if (argint(0, &n) < 0)
+        return -1;
+    exit(n);
+    return 0;  // not reached
 }
 
 uint64
-sys_getpid(void)
-{
-  return myproc()->pid;
+sys_getpid(void) {
+    return myproc()->pid;
 }
 
 uint64
-sys_fork(void)
-{
-  return fork();
+sys_fork(void) {
+    return fork();
 }
 
-uint64 sys_wait(void)
-{
-  uint64 p;
-  if(argaddr(0, &p) < 0)
-    return -1;
-  return wait(p);
+uint64 sys_wait(void) {
+    uint64 p;
+    if (argaddr(0, &p) < 0)
+        return -1;
+    return wait(p);
 }
+
 uint64 sys_wait_stat(void) {
     uint64 status;
     uint64 performance;
@@ -44,89 +41,83 @@ uint64 sys_wait_stat(void) {
         return -1;
     if (argaddr(1, &performance) < 0)
         return -1;
-    pid = wait_stat(status, (struct perf*) performance);
+    pid = wait_stat(status, (struct perf *) performance);
     return pid;
 }
 
-uint64 sys_sbrk(void)
-{
-  int addr;
-  int n;
+uint64 sys_sbrk(void) {
+    int addr;
+    int n;
 
-  if(argint(0, &n) < 0)
-    return -1;
-  addr = myproc()->sz;
-  if(growproc(n) < 0)
-    return -1;
-  return addr;
+    if (argint(0, &n) < 0)
+        return -1;
+    addr = myproc()->sz;
+    if (growproc(n) < 0)
+        return -1;
+    return addr;
 }
 
 uint64
-sys_sleep(void)
-{
-  int n;
-  uint ticks0;
+sys_sleep(void) {
+    int n;
+    uint ticks0;
 
-  if(argint(0, &n) < 0)
-    return -1;
-  acquire(&tickslock);
-  ticks0 = ticks;
-  while(ticks - ticks0 < n){
-    if(myproc()->killed){
-      release(&tickslock);
-      return -1;
+    if (argint(0, &n) < 0)
+        return -1;
+    acquire(&tickslock);
+    ticks0 = ticks;
+    while (ticks - ticks0 < n) {
+        if (myproc()->killed) {
+            release(&tickslock);
+            return -1;
+        }
+        sleep(&ticks, &tickslock);
     }
-    sleep(&ticks, &tickslock);
-  }
-  release(&tickslock);
-  return 0;
+    release(&tickslock);
+    return 0;
 }
 
 uint64
-sys_kill(void)
-{
-  int pid;
+sys_kill(void) {
+    int pid;
 
-  if(argint(0, &pid) < 0)
-    return -1;
-  return kill(pid);
+    if (argint(0, &pid) < 0)
+        return -1;
+    return kill(pid);
 }
 
 // return how many clock tick interrupts have occurred
 // since start.
 uint64
-sys_uptime(void)
-{
-  uint xticks;
+sys_uptime(void) {
+    uint xticks;
 
-  acquire(&tickslock);
-  xticks = ticks;
-  release(&tickslock);
-  return xticks;
+    acquire(&tickslock);
+    xticks = ticks;
+    release(&tickslock);
+    return xticks;
 }
 
 // ass1 - trace syscall
-uint64 sys_trace(void)
-{
+uint64 sys_trace(void) {
     int mask;
-    if (argint(0, &mask) < 0){
+    if (argint(0, &mask) < 0) {
         return -1; // illegal arg
     }
     myproc()->mask = mask;
     return 0;
 }
-
-uint64 sys_set_priority(void)
-{
-    static int decay_fac_arr[] ={
-            0,TESTHIGH,HIGH,NORMAL,LOW,TESTLOW
+// TODO: remove all test prints here + in sched function
+uint64 sys_set_priority(void) {
+    int decay_fac_arr[] = { // 0 is just empty space for convenience
+            0, TESTHIGH, HIGH, NORMAL, LOW, TESTLOW
     };
     int priority;
-    if (argint(0, &priority) < 0){
+    if (argint(0, &priority) < 0) {
         return -1;
     }
-    if(priority<1 || priority>5)
-        return  -1;
+    if (priority < 1 || priority > 5)
+        return -1;
     printf("id: %d, priority before change %d\n", myproc()->pid, myproc()->decay_factor);
     myproc()->decay_factor = decay_fac_arr[priority];
     printf("id: %d, priority after change %d\n", myproc()->pid, myproc()->decay_factor);
