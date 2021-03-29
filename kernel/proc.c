@@ -574,7 +574,7 @@ void scheduler(void) {
         // to release its lock and then re-acquire it
         // before jumping back to us.
         if ( min_proc != 0){
-            printf("process pid %d with fcfs_time %d\n",min_proc->pid,min_proc->perf.fcfs_time);
+            //printf("process pid %d with fcfs_time %d\n",min_proc->pid,min_proc->fcfs_time);
             min_proc->state = RUNNING;
             c->proc = min_proc;
             swtch(&c->context, &min_proc->context);
@@ -690,6 +690,7 @@ yield(void) {
     p->state = RUNNABLE;
 #ifdef FCFS
     p->fcfs_time = get_ticks();
+    printf("ticks num yield: %d\n", get_ticks());
 #endif
 #ifdef SRT
     update_bursttime();

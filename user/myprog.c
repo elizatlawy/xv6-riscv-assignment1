@@ -5,14 +5,11 @@
 
 void srt_test();
 void trace_tests();
+void fcfs_test();
+
 
 int main(int argc, char **argv) {
-    set_priority(2);
-    int pid = -1;
-    pid = fork();
-    if(pid == 0){
-        exec("ls",argv);
-    }
+    fcfs_test();
     exit(0);
 }
 
@@ -75,5 +72,37 @@ void srt_test(){
         }
         fprintf(2, "Child %d is finished runinng\n", my_pid);
     }
-    exit(0);
+}
+
+void fcfs_test(){
+    int pid = -1;
+    for(int i = 0; i < 10; i++){
+        if(pid != 0){
+            pid = fork();
+        }
+    }
+    if (pid != 0) { // parent
+        int status;
+        struct perf perf;
+        for(int i = 0; i < 10; i++){
+            pid = wait_stat(&status, &perf);
+            if (pid != -1){
+//                printf("child (%d) exited with status %d\n", pid, status);
+//                printf("creation time:    %d\n", perf.ctime);
+//                printf("termination time: %d\n", perf.ttime);
+//                printf("running time:     %d\n", perf.rutime);
+//                printf("runnable time:    %d\n", perf.retime);
+//                printf("sleeping time:    %d\n", perf.stime);
+            }
+        }
+    } else { // child
+//        int my_pid = getpid();
+//        fprintf(2, "Child %d is running\n", my_pid);
+        for(int i=0;i<(1000*getpid());i++){
+        }
+//        sleep(10*getpid());
+        for(int i=0;i<(1000*getpid());i++) {
+        }
+ //       fprintf(2, "Child %d is finished runinng\n", my_pid);
+    }
 }
