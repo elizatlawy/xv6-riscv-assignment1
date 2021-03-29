@@ -14,5 +14,5 @@ typedef struct perf {
     int stime;
     int retime;
     int rutime;
-    int bursttime;
+    int average_bursttime;
 }perf;

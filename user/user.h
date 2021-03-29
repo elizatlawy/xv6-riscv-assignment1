@@ -24,7 +24,7 @@ int getpid(void);
 char* sbrk(int);
 int sleep(int);
 int uptime(void);
-void trace(int mask,int pid);
+int trace(int mask,int pid);
 int wait_stat(int*, struct perf *);
 int set_priority(int);
 

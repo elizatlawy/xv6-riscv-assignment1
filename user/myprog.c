@@ -9,7 +9,8 @@ void fcfs_test();
 
 
 int main(int argc, char **argv) {
-    fcfs_test();
+//    fcfs_test();
+    srt_test();
     exit(0);
 }
 
@@ -20,7 +21,8 @@ void trace_tests(){
     int cpid=fork();//prints fork once
     if (cpid==0){
         fork();// prints fork for the second time - the first son forks
-        mask= (1<< 13); //to turn on only the sleep bit
+        sbrk(1);
+//        mask= (1<< 13); //to turn on only the sleep bit
         //mask= (1<< 1)|(1<< 13); you can uncomment this inorder to check you print for both fork and sleep syscalls
         trace(mask, getpid()); //the first son and the grandchilde changes mask to print sleep
         sleep(1);
