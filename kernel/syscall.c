@@ -125,6 +125,9 @@ extern uint64 sys_wait_stat(void);
 
 extern uint64 sys_set_priority(void);
 
+extern uint64 sys_yield(void);
+
+
 static uint64 (*syscalls[])(void) = {
         [SYS_fork]    sys_fork,
         [SYS_exit]    sys_exit,
@@ -149,7 +152,8 @@ static uint64 (*syscalls[])(void) = {
         [SYS_close]   sys_close,
         [SYS_trace]   sys_trace,
         [SYS_wait_stat]     sys_wait_stat,
-        [SYS_set_priority]  sys_set_priority
+        [SYS_set_priority]  sys_set_priority,
+        [SYS_yield]   sys_yield,
 
 };
 

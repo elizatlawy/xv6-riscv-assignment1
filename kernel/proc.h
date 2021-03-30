@@ -110,7 +110,7 @@ struct proc {
     char name[16];               // Process name (debugging)
     int mask;                    // Process mask for trace syscall
     struct perf perf;            // Process performance struct
-    int fcfs_time;               // time of turning to runnable
+    int fcfs_time;               // last time of turning to runnable
     int last_rutime;            //  the total time the process spent in the last RUNNING state
-    int decay_factor;            // 1-highest priority, 5-lowest priority
+    int decay_factor;            // decay_factor by priority 1-highest priority, 5-lowest priority
 };

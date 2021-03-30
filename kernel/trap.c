@@ -74,12 +74,13 @@ usertrap(void) {
 
     if (p->killed)
         exit(-1);
-
-    // give up the CPU if this is a timer interrupt & only each QUANTUM ticks (ticks % QUANTUM == 0).
+    /// give up the CPU if this is a timer interrupt only on preemptive scheduler,
+    ///  not on FCFS that is non-preemptive & only on each QUANTUM ticks (ticks % QUANTUM == 0).
+#if defined DEFAULT || defined srt || defined CFSD
     if ((which_dev == 2) && (ticks % QUANTUM == 0)){
         yield();
     }
-
+#endif
     usertrapret();
 }
 
@@ -147,10 +148,12 @@ kerneltrap() {
         panic("kerneltrap");
     }
 
-    // give up the CPU if this is a timer interrupt & only each QUANTUM ticks (ticks % QUANTUM == 0).
+    /// give up the CPU if this is a timer interrupt only on preemptive scheduler,
+    ///  not on FCFS that is non-preemptive & only on each QUANTUM ticks (ticks % QUANTUM == 0).
+#if defined DEFAULT || defined srt || defined CFSD
     if (which_dev == 2 && myproc() != 0 && myproc()->state == RUNNING && (ticks % QUANTUM == 0))
         yield();
-
+#endif
     // the yield() may have caused some traps to occur,
     // so restore trap registers for use by kernelvec.S's sepc instruction.
     w_sepc(sepc);

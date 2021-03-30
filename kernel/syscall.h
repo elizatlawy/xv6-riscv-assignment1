@@ -23,5 +23,8 @@
 #define SYS_trace  22
 #define SYS_wait_stat  23
 #define SYS_set_priority    24
+#define SYS_yield  25
+
+
 
 

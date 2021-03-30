@@ -3,20 +3,61 @@
 #include "kernel/fcntl.h"
 #include "kernel/syscall.h"
 
-void srt_test();
+void srt_tests();
 
 void trace_tests();
 
-void fcfs_test();
+void fcfs_tests();
 
-void cfsd_test();
-
+void cfsd_tests();
 
 int main(int argc, char **argv) {
-//    fcfs_test();
-    srt_test();
+    fcfs_tests();
+//    srt_tests();
     exit(0);
 }
+
+void fcfs_tests() {
+    int pid = -1;
+    for (int i = 0; i < 10; i++) {
+        if (pid != 0) {
+            pid = fork();
+        }
+    }
+    if (pid != 0) { // parent
+        int status;
+        struct perf perfs[10];
+        for (int i = 0; i < 10; i++) {
+//            struct perf pref;
+            pid = wait_stat(&status, &perfs[i]);
+        }
+        // print all child's pref only after everyone is finished jsut to keep the printing in order.
+        for (int i = 0; i < 10; i++) {
+            printf("child (%d) exited with status %d\n", pid, status);
+            printf("creation time:    %d\n", perfs[i].ctime);
+            printf("termination time: %d\n", perfs[i].ttime);
+            printf("running time:     %d\n", perfs[i].rutime);
+            printf("runnable time:    %d\n", perfs[i].retime);
+            printf("sleeping time:    %d\n", perfs[i].stime);
+            printf("average_bursttime:    %d\n", perfs[i].average_bursttime);
+        }
+
+    } else { // child
+        int my_pid = getpid();
+        fprintf(2, "Child %d is running\n", my_pid);
+        int iter = getpid();
+        while (iter > 0) { // 10 iter of for + sleep.
+            for (int i = 0; i < (1000000 * my_pid); i++) {
+            }
+            yield();
+            for (int i = 0; i < (1000000 * my_pid); i++) {
+            }
+            iter--;
+        }
+//        fprintf(2, "Child %d is finished runinng\n", my_pid);
+    }
+}
+
 
 void trace_tests() {
     int mask = ((1 << SYS_fork) | (1 << SYS_kill) | (1 << SYS_sbrk) | (1 << SYS_write));
@@ -39,7 +80,7 @@ void trace_tests() {
 }
 
 
-void srt_test() {
+void srt_tests() {
 //    set_priority(2);
     int pid = -1;
     for (int i = 0; i < 2; i++) {
@@ -79,7 +120,7 @@ void srt_test() {
 }
 
 
-void cfsd_test(){
+void cfsd_tests() {
     set_priority(1);
     int pid = -1;
     int priority = 5;
@@ -87,8 +128,8 @@ void cfsd_test(){
         if (pid != 0) {
             pid = fork();
             // set child priority 5 to 1 over & over
-            priority --;
-            if( priority < 1)
+            priority--;
+            if (priority < 1)
                 priority = 5;
         }
     }
@@ -122,38 +163,7 @@ void cfsd_test(){
         }
         fprintf(2, "Child %d is finished runinng\n", my_pid);
     }
-
 }
 
-void fcfs_test() {
-    int pid = -1;
-    for (int i = 0; i < 10; i++) {
-        if (pid != 0) {
-            pid = fork();
-        }
-    }
-    if (pid != 0) { // parent
-        int status;
-        struct perf perf;
-        for (int i = 0; i < 10; i++) {
-            pid = wait_stat(&status, &perf);
-            if (pid != -1) {
-//                printf("child (%d) exited with status %d\n", pid, status);
-//                printf("creation time:    %d\n", perf.ctime);
-//                printf("termination time: %d\n", perf.ttime);
-//                printf("running time:     %d\n", perf.rutime);
-//                printf("runnable time:    %d\n", perf.retime);
-//                printf("sleeping time:    %d\n", perf.stime);
-            }
-        }
-    } else { // child
-//        int my_pid = getpid();
-//        fprintf(2, "Child %d is running\n", my_pid);
-        for (int i = 0; i < (1000 * getpid()); i++) {
-        }
-//        sleep(10*getpid());
-        for (int i = 0; i < (1000 * getpid()); i++) {
-        }
-        //       fprintf(2, "Child %d is finished runinng\n", my_pid);
-    }
-}
+
+

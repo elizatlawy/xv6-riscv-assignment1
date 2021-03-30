@@ -27,6 +27,7 @@ int uptime(void);
 int trace(int mask,int pid);
 int wait_stat(int*, struct perf *);
 int set_priority(int);
+int yield();
 
 
 // ulib.c

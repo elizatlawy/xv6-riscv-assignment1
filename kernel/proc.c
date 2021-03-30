@@ -102,9 +102,6 @@ myproc(void) {
     return p;
 }
 
-int get_ticks(void) {
-    return ticks;
-}
 
 void update_avrg_bursttime() {
     struct proc *p = myproc();
@@ -151,10 +148,13 @@ allocproc(void) {
     found:
     p->pid = allocpid();
     p->state = USED;
-    p->perf.ctime = get_ticks();
+    p->perf.ctime = ticks;
+#ifdef SRT
     p->perf.average_bursttime = QUANTUM * 100;
+#endif
+#ifdef CFSD
     p->decay_factor = NORMAL;
-
+#endif
     // Allocate a trapframe page.
     if ((p->trapframe = (struct trapframe *) kalloc()) == 0) {
         freeproc(p);
@@ -283,7 +283,7 @@ userinit(void) {
 
     p->state = RUNNABLE;
 #ifdef FCFS
-    p->fcfs_time = get_ticks();
+    p->fcfs_time = ticks;
 #endif
 
     release(&p->lock);
@@ -360,7 +360,8 @@ fork(void) {
     acquire(&np->lock);
     np->state = RUNNABLE;
 #ifdef FCFS
-    np->fcfs_time = get_ticks();
+
+    np->fcfs_time = ticks;
 #endif
     release(&np->lock);
 
@@ -414,7 +415,7 @@ exit(int status) {
     wakeup(p->parent);
 
     acquire(&p->lock);
-    p->perf.ttime = get_ticks();
+    p->perf.ttime = ticks;
 
     p->xstate = status;
     p->state = ZOMBIE;
@@ -572,7 +573,7 @@ void scheduler(void) {
         // to release its lock and then re-acquire it
         // before jumping back to us.
         if ( min_proc != 0){
-            //printf("process pid %d with fcfs_time %d\n",min_proc->pid,min_proc->fcfs_time);
+//            printf("process with pid %d strated with fcfs_time %d\n",min_proc->pid,min_proc->fcfs_time);
             min_proc->state = RUNNING;
             c->proc = min_proc;
             swtch(&c->context, &min_proc->context);
@@ -681,12 +682,12 @@ sched(void) {
 // Give up the CPU for one scheduling round.
 void
 yield(void) {
-    printf("ticks num yield: %d\n", get_ticks());
+//    printf("ticks num yield: %d\n", ticks);
     struct proc *p = myproc();
     acquire(&p->lock);
     p->state = RUNNABLE;
 #ifdef FCFS
-    p->fcfs_time = get_ticks();
+    p->fcfs_time = ticks;
 #endif
 #ifdef SRT
     update_avrg_bursttime();
@@ -761,7 +762,7 @@ wakeup(void *chan) {
             if (p->state == SLEEPING && p->chan == chan) {
                 p->state = RUNNABLE;
 #ifdef FCFS
-                p->fcfs_time = get_ticks();
+                p->fcfs_time = ticks;
 #endif
             }
             release(&p->lock);
@@ -784,7 +785,7 @@ kill(int pid) {
                 // Wake process from sleep().
                 p->state = RUNNABLE;
 #ifdef FCFS
-                p->fcfs_time = get_ticks();
+                p->fcfs_time = ticks;
 #endif
             }
             release(&p->lock);
