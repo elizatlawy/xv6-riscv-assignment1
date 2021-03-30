@@ -45,10 +45,9 @@ proc_mapstacks(pagetable_t kpgtbl) {
 
 void inc_stat_ticks(void) {
     struct proc *p;
-//    acquire(&pid_lock);
     for (p = proc; p < &proc[NPROC]; p++) {
-        if (p != 0) { // check if p is not null
-            acquire(&p->lock);
+        acquire(&p->lock);
+        if (p->state != UNUSED) { // check if p is not null
             if (p->state == SLEEPING)
                 p->perf.stime++;
             if (p->state == RUNNABLE)
@@ -57,10 +56,9 @@ void inc_stat_ticks(void) {
                 p->last_rutime++;
                 p->perf.rutime++;
             }
-            release(&p->lock);
         }
+        release(&p->lock);
     }
-//    release(&pid_lock);
 }
 
 // initialize the proc table at boot time.
@@ -110,9 +108,8 @@ int get_ticks(void) {
 
 void update_avrg_bursttime() {
     struct proc *p = myproc();
-//    int curr_burst = get_ticks() - p->last_rutime;
-    p->perf.average_bursttime = (ALPHA * p->last_rutime) + ((100 - ALPHA) * p->perf.average_bursttime) / 100;
-    p->last_rutime = 0; // reset last run time
+    int new_average_bursttime = ((ALPHA * p->last_rutime) + (((100 - ALPHA) * p->perf.average_bursttime) / 100));
+    p->perf.average_bursttime = new_average_bursttime;
 }
 
 int calculate_ratio(struct proc *p) {
@@ -206,7 +203,6 @@ freeproc(struct proc *p) {
     p->perf.retime = 0;
     p->perf.rutime = 0;
     p->perf.average_bursttime = 0;
-//    p->last_rutime_tick = 0;
     p->last_rutime = 0;
     p->decay_factor = 0;
     p->state = UNUSED;
@@ -610,10 +606,9 @@ void scheduler(void) {
         // to release its lock and then reacquire it
         // before jumping back to us.
         if ( min_proc != 0){
-//            printf("process pid %d with average_bursttime %d\n",min_proc->pid,min_proc->perf.average_bursttime);
+//            printf("process pid %d with average_bursttime: %d was SELECTED\n",min_proc->pid,min_proc->perf.average_bursttime);
             min_proc->state = RUNNING;
             c->proc = min_proc;
-//            p->last_rutime_tick = get_ticks();
             swtch(&c->context, &min_proc->context);
             // Process is done running for now.
             // It should have changed its p->state before coming back.
@@ -669,7 +664,6 @@ void
 sched(void) {
     int intena;
     struct proc *p = myproc();
-
     if (!holding(&p->lock))
         panic("sched p->lock");
     if (mycpu()->noff != 1)
@@ -696,6 +690,7 @@ yield(void) {
 #endif
 #ifdef SRT
     update_avrg_bursttime();
+    p->last_rutime = 0; // reset last run time
 #endif
     sched();
     release(&p->lock);
@@ -742,6 +737,7 @@ sleep(void *chan, struct spinlock *lk) {
     p->state = SLEEPING;
 #ifdef SRT
     update_avrg_bursttime();
+    p->last_rutime = 0; // reset last run time
 #endif
 
     sched();
