@@ -690,7 +690,7 @@ yield(void) {
 #endif
 #ifdef SRT
     update_avrg_bursttime();
-    p->last_rutime = 0; // reset last run time
+    p->last_rutime = 0; // reset the last run time
 #endif
     sched();
     release(&p->lock);
