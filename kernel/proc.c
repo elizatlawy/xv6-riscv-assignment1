@@ -681,12 +681,12 @@ sched(void) {
 // Give up the CPU for one scheduling round.
 void
 yield(void) {
+    printf("ticks num yield: %d\n", get_ticks());
     struct proc *p = myproc();
     acquire(&p->lock);
     p->state = RUNNABLE;
 #ifdef FCFS
     p->fcfs_time = get_ticks();
-//    printf("ticks num yield: %d\n", get_ticks());
 #endif
 #ifdef SRT
     update_avrg_bursttime();

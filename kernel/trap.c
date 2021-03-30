@@ -8,7 +8,6 @@
 
 struct spinlock tickslock;
 uint ticks;
-uint q_ticks;
 
 extern void inc_stat_ticks(void);
 
@@ -76,8 +75,8 @@ usertrap(void) {
     if (p->killed)
         exit(-1);
 
-    // give up the CPU if this is a timer interrupt & q_ticks >= QUANTUM.
-    if (which_dev == 2 && q_ticks >= QUANTUM){
+    // give up the CPU if this is a timer interrupt & only each QUANTUM ticks (ticks % QUANTUM == 0).
+    if ((which_dev == 2) && (ticks % QUANTUM == 0)){
         yield();
     }
 
@@ -148,8 +147,8 @@ kerneltrap() {
         panic("kerneltrap");
     }
 
-    // give up the CPU if this is a timer interrupt & q_ticks >= QUANTUM.
-    if (which_dev == 2 && myproc() != 0 && myproc()->state == RUNNING && q_ticks >= QUANTUM)
+    // give up the CPU if this is a timer interrupt & only each QUANTUM ticks (ticks % QUANTUM == 0).
+    if (which_dev == 2 && myproc() != 0 && myproc()->state == RUNNING && (ticks % QUANTUM == 0))
         yield();
 
     // the yield() may have caused some traps to occur,
@@ -163,9 +162,6 @@ clockintr() {
     inc_stat_ticks();
     acquire(&tickslock);
     ticks++;
-    q_ticks++; // count up to QUANTUM and them reset to 1
-    if (q_ticks > QUANTUM)
-        q_ticks = 1;
     wakeup(&ticks);
     release(&tickslock);
 }
