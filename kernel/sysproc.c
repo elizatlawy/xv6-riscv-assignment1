@@ -124,8 +124,24 @@ uint64 sys_set_priority(void) {
     return 0;
 }
 
+// yield system call - just for testing
 uint64 sys_yield(void){
     yield();
     printf("process id: %d Yield by yield syscall\n", myproc()->pid);
-    return 0; // why?
+    return 0;
+}
+
+// get tick system call - just for testing
+uint64 sys_get_ticks(void){
+    return ticks;
+}
+
+uint64 sys_change_bursttime(void){
+    int new_bursttime;
+    if (argint(0, &new_bursttime) < 0)
+        return -1;
+    printf("process id: %d average_bursttime BEFORE change: \n", myproc()->perf.average_bursttime);
+    myproc()->perf.average_bursttime = new_bursttime;
+    printf("process id: %d average_bursttime AFTER change: \n", myproc()->perf.average_bursttime);
+    return 0;
 }

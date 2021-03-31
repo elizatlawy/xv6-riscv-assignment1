@@ -2817,7 +2817,7 @@ main(int argc, char *argv[])
     {mem, "mem"},
     {pipe1, "pipe1"},
     {killstatus, "killstatus"},
-    {preempt, "preempt"},
+//    {preempt, "preempt"}, // not work with FCFS due to inf loop!!
     {exitwait, "exitwait"},
     {rmdot, "rmdot"},
     {fourteen, "fourteen"},

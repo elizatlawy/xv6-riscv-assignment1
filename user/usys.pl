@@ -40,4 +40,6 @@ entry("trace");
 entry("wait_stat");
 entry("set_priority");
 entry("yield");
+entry("get_ticks");
+entry("change_bursttime");
 

@@ -28,6 +28,8 @@ int trace(int mask,int pid);
 int wait_stat(int*, struct perf *);
 int set_priority(int);
 int yield();
+int get_ticks();
+int change_bursttime(int);
 
 
 // ulib.c

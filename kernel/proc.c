@@ -105,7 +105,7 @@ myproc(void) {
 
 void update_avrg_bursttime() {
     struct proc *p = myproc();
-    int new_average_bursttime = ((ALPHA * p->last_rutime) + (((100 - ALPHA) * p->perf.average_bursttime) / 100));
+    int new_average_bursttime = (ALPHA * p->last_rutime) + ((((100 - ALPHA) * p->perf.average_bursttime)) / 100);
     p->perf.average_bursttime = new_average_bursttime;
 }
 
@@ -149,9 +149,7 @@ allocproc(void) {
     p->pid = allocpid();
     p->state = USED;
     p->perf.ctime = ticks;
-#ifdef SRT
     p->perf.average_bursttime = QUANTUM * 100;
-#endif
 #ifdef CFSD
     p->decay_factor = NORMAL;
 #endif
@@ -419,7 +417,9 @@ exit(int status) {
 
     p->xstate = status;
     p->state = ZOMBIE;
-
+    // TODO: is necessary to update avrg_bursttime on exit?
+    update_avrg_bursttime();
+    p->last_rutime = 0; // reset the last run time
     release(&wait_lock);
 
     // Jump into the scheduler, never to return.
@@ -689,10 +689,8 @@ yield(void) {
 #ifdef FCFS
     p->fcfs_time = ticks;
 #endif
-#ifdef SRT
     update_avrg_bursttime();
     p->last_rutime = 0; // reset the last run time
-#endif
     sched();
     release(&p->lock);
 }
@@ -736,10 +734,8 @@ sleep(void *chan, struct spinlock *lk) {
     // Go to sleep.
     p->chan = chan;
     p->state = SLEEPING;
-#ifdef SRT
     update_avrg_bursttime();
     p->last_rutime = 0; // reset last run time
-#endif
 
     sched();
 

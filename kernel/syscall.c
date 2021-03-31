@@ -127,6 +127,10 @@ extern uint64 sys_set_priority(void);
 
 extern uint64 sys_yield(void);
 
+extern uint64 sys_get_ticks(void);
+
+extern uint64 sys_change_bursttime(void );
+
 
 static uint64 (*syscalls[])(void) = {
         [SYS_fork]    sys_fork,
@@ -154,7 +158,8 @@ static uint64 (*syscalls[])(void) = {
         [SYS_wait_stat]     sys_wait_stat,
         [SYS_set_priority]  sys_set_priority,
         [SYS_yield]   sys_yield,
-
+        [SYS_get_ticks]  sys_get_ticks,
+        [SYS_change_bursttime]  sys_change_bursttime
 };
 
 // for syscall trace - an array of all the syscall names
@@ -166,7 +171,8 @@ static char *syscall_names[] = {
         [SYS_sleep] "sleep", [SYS_uptime] "uptime", [SYS_open] "open",
         [SYS_write] "write", [SYS_mknod] "mknod", [SYS_unlink] "unlink",
         [SYS_link] "link", [SYS_mkdir] "mkdir", [SYS_close] "close",
-        [SYS_trace] "trace", [SYS_wait_stat] "wait_stat", [SYS_set_priority] "set_priority"
+        [SYS_trace] "trace", [SYS_wait_stat] "wait_stat", [SYS_set_priority] "set_priority",
+        [SYS_yield] "sys_yield", [SYS_get_ticks] "sys_get_ticks", [SYS_change_bursttime] "sys_change_bursttime"
 };
 
 void

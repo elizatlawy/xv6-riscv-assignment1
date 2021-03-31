@@ -3,23 +3,29 @@
 #include "kernel/fcntl.h"
 #include "kernel/syscall.h"
 
-void srt_tests();
+void srt_test1();
+
+void srt_test2();
+
+void srt_tets3();
 
 void trace_tests();
 
-void fcfs_tests();
+void fcfs_test1();
 
 void cfsd_tests();
 
 int main(int argc, char **argv) {
-    fcfs_tests();
-//    srt_tests();
+    fcfs_test1();
+//    srt_test1();
     exit(0);
 }
 
-void fcfs_tests() {
+//// this test create 3 child process: first run for 24 ticks, second for 10 ticks, third for 1 tick
+//// expected order of finish: pid 4 -> pid 5 -> pid 6
+void fcfs_test1() {
     int pid = -1;
-    for (int i = 0; i < 10; i++) {
+    for (int i = 0; i < 3; i++) {
         if (pid != 0) {
             pid = fork();
         }
@@ -27,13 +33,13 @@ void fcfs_tests() {
     if (pid != 0) { // parent
         int status;
         struct perf perfs[10];
-        for (int i = 0; i < 10; i++) {
-//            struct perf pref;
-            pid = wait_stat(&status, &perfs[i]);
+        int pids[10];
+        for (int i = 0; i < 3; i++) {
+            pids[i] = wait_stat(&status, &perfs[i]);
         }
-        // print all child's pref only after everyone is finished jsut to keep the printing in order.
-        for (int i = 0; i < 10; i++) {
-            printf("child (%d) exited with status %d\n", pid, status);
+        // print all child's pref only after everyone is finished just to keep the printing in order.
+        for (int i = 0; i < 3; i++) {
+            printf("child (%d) exited with status %d\n", pids[i], status);
             printf("creation time:    %d\n", perfs[i].ctime);
             printf("termination time: %d\n", perfs[i].ttime);
             printf("running time:     %d\n", perfs[i].rutime);
@@ -41,20 +47,21 @@ void fcfs_tests() {
             printf("sleeping time:    %d\n", perfs[i].stime);
             printf("average_bursttime:    %d\n", perfs[i].average_bursttime);
         }
-
     } else { // child
         int my_pid = getpid();
-        fprintf(2, "Child %d is running\n", my_pid);
-        int iter = getpid();
-        while (iter > 0) { // 10 iter of for + sleep.
-            for (int i = 0; i < (1000000 * my_pid); i++) {
-            }
-            yield();
-            for (int i = 0; i < (1000000 * my_pid); i++) {
-            }
-            iter--;
+        fprintf(2, "Child %d started running\n", my_pid);
+        int start = get_ticks();
+        int end = 0;
+        if (my_pid == 4) // first child
+            end = start + 24;
+        else if (my_pid == 5)// second child
+            end = start + 10;
+        else  // third child
+            end = start + 1;
+        while (1){ // while true
+            if (get_ticks() > end) // run while loop until reach the correct tick
+                break;
         }
-//        fprintf(2, "Child %d is finished runinng\n", my_pid);
     }
 }
 
@@ -80,7 +87,7 @@ void trace_tests() {
 }
 
 
-void srt_tests() {
+void srt_test1() {
 //    set_priority(2);
     int pid = -1;
     for (int i = 0; i < 2; i++) {
@@ -93,15 +100,9 @@ void srt_tests() {
         struct perf perf;
         for (int i = 0; i < 10; i++) {
             pid = wait_stat(&status, &perf);
-            if (pid != -1) {
-                printf("child (%d) exited with status %d\n", pid, status);
-                printf("creation time:    %d\n", perf.ctime);
-                printf("termination time: %d\n", perf.ttime);
-                printf("running time:     %d\n", perf.rutime);
-                printf("runnable time:    %d\n", perf.retime);
-                printf("sleeping time:    %d\n", perf.stime);
-                printf("average_bursttime:    %d\n", perf.average_bursttime);
-            }
+                printf("terminated pid: %d, ctime: %d, ttime: %d, stime: %d, retime: %d, rutime: %d average_bursttime: %d \n",
+                       pid, perf.ctime, perf.ttime, perf.stime,
+                       perf.retime, perf.rutime, perf.average_bursttime);
         }
     } else { // child
         int my_pid = getpid();
@@ -115,11 +116,65 @@ void srt_tests() {
             }
             iter--;
         }
-        fprintf(2, "Child %d is finished runinng\n", my_pid);
+//        fprintf(2, "Child %d is finished runinng\n", my_pid);
     }
 }
 
-
+void srt_tets3(){
+    fprintf(2, "Hello world!\n");
+    struct perf performance;
+    int mask=(1<< 1) | (1<< 23) | (1<< 3);
+    trace(mask, getpid());
+    int cpid = fork();
+    if (cpid != 0){
+        int t_pid = wait_stat(0, &performance);
+        fprintf(1, "terminated pid: %d, ctime: %d, ttime: %d, stime: %d, retime: %d, rutime: %d average_bursttime: %d \n",
+                t_pid, performance.ctime, performance.ttime, performance.stime,
+                performance.retime, performance.rutime, performance.average_bursttime);
+    }
+    else{
+        sleep(10);
+        for(int i=1; i < 15; i++){
+            int c_pid = fork();
+            if(c_pid == 0){
+                sleep(i);
+                exit(0);
+            }
+            else{
+                int i = 0;
+                while(i<100000000){
+                    i++;
+                }
+            }
+        }
+        sleep(10);
+        for(int i=1; i < 15; i++){
+            int c_pid = fork();
+            if(c_pid == 0){
+                int i = 0;
+                while(i<10000000){
+                    i++;
+                }
+                exit(0);
+            }
+            else{
+                int t_pid = wait_stat(0, &performance);
+                fprintf(1, "terminated pid: %d, ctime: %d, ttime: %d, stime: %d, retime: %d, rutime: %d average_bursttime: %d \n",
+                        t_pid, performance.ctime, performance.ttime, performance.stime, performance.retime,
+                        performance.rutime, performance.average_bursttime);
+                int i = 0;
+                while(i<10000){
+                    i++;
+                }
+            }
+        }
+        int t_pid = wait_stat(0, &performance);
+        fprintf(1, "terminated pid: %d, ctime: %d, ttime: %d, stime: %d, retime: %d, rutime: %d average_bursttime: %d \n",
+                t_pid, performance.ctime, performance.ttime, performance.stime, performance.retime,
+                performance.rutime, performance.average_bursttime);
+        exit(0);
+    }
+}
 void cfsd_tests() {
     set_priority(1);
     int pid = -1;

@@ -24,6 +24,8 @@
 #define SYS_wait_stat  23
 #define SYS_set_priority    24
 #define SYS_yield  25
+#define SYS_get_ticks  26
+#define SYS_change_bursttime  27
 
 
 
