@@ -162,11 +162,11 @@ kerneltrap() {
 
 void
 clockintr() {
-    inc_stat_ticks();
     acquire(&tickslock);
     ticks++;
     wakeup(&ticks);
     release(&tickslock);
+    inc_stat_ticks();
 }
 
 // check if it's an external interrupt or software interrupt,

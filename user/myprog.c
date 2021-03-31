@@ -16,9 +16,57 @@ void fcfs_test1();
 void cfsd_tests();
 
 int main(int argc, char **argv) {
-    fcfs_test1();
+    srt_tets3();
+//    srt_tets3();
+//    fcfs_test1();
 //    srt_test1();
     exit(0);
+}
+
+//// this test create 3 child process: first set burst time to: 50000 , second to 100, third to 5000 and all yield
+//// expected order of finish: pid 5 -> pid 6 -> pid 4
+void srt_test2(){
+    int pid = -1;
+    for (int i = 0; i < 3; i++) {
+        if (pid != 0) {
+            pid = fork();
+        }
+    }
+    if (pid != 0) { // parent
+        int status;
+        struct perf perfs[10];
+        int pids[10];
+        for (int i = 0; i < 3; i++) {
+            pids[i] = wait_stat(&status, &perfs[i]);
+        }
+        // print all child's pref only after everyone is finished just to keep the printing in order.
+        for (int i = 0; i < 3; i++) {
+            printf("child (%d) exited with status %d\n", pids[i], status);
+            printf("creation time:    %d\n", perfs[i].ctime);
+            printf("termination time: %d\n", perfs[i].ttime);
+            printf("running time:     %d\n", perfs[i].rutime);
+            printf("runnable time:    %d\n", perfs[i].retime);
+            printf("sleeping time:    %d\n", perfs[i].stime);
+            printf("average_bursttime:    %d\n", perfs[i].average_bursttime);
+        }
+    } else { // child
+        int my_pid = getpid();
+        fprintf(2, "Child %d started running\n", my_pid);
+        int start = get_ticks();
+        int end = 0;
+        if (my_pid == 4) // first child
+            change_bursttime(50000);
+        else if (my_pid == 5)// second child
+            change_bursttime(100);
+        else if (my_pid == 6)  // third child
+            change_bursttime(5000);
+        yield();
+        end = start + 20; // all child will run for 20 ticks
+        while (1){ // while true
+            if (get_ticks() > end)  // run while loop until reach the correct tick
+                break;
+        }
+    }
 }
 
 //// this test create 3 child process: first run for 24 ticks, second for 10 ticks, third for 1 tick
@@ -88,7 +136,6 @@ void trace_tests() {
 
 
 void srt_test1() {
-//    set_priority(2);
     int pid = -1;
     for (int i = 0; i < 2; i++) {
         if (pid != 0) {
@@ -120,6 +167,7 @@ void srt_test1() {
     }
 }
 
+/// test form Yaeli not mine!
 void srt_tets3(){
     fprintf(2, "Hello world!\n");
     struct perf performance;
@@ -136,7 +184,7 @@ void srt_tets3(){
         sleep(10);
         for(int i=1; i < 15; i++){
             int c_pid = fork();
-            if(c_pid == 0){
+            if(c_pid == 0){ // Child
                 sleep(i);
                 exit(0);
             }
@@ -175,17 +223,13 @@ void srt_tets3(){
         exit(0);
     }
 }
-void cfsd_tests() {
+void cfsd_test1() {
     set_priority(1);
     int pid = -1;
     int priority = 5;
     for (int i = 0; i < 10; i++) {
         if (pid != 0) {
             pid = fork();
-            // set child priority 5 to 1 over & over
-            priority--;
-            if (priority < 1)
-                priority = 5;
         }
     }
     if (pid != 0) { // parent

@@ -46,18 +46,17 @@ proc_mapstacks(pagetable_t kpgtbl) {
 void inc_stat_ticks(void) {
     struct proc *p;
     for (p = proc; p < &proc[NPROC]; p++) {
-        acquire(&p->lock);
         if (p->state != UNUSED) { // check if p is not null
             if (p->state == SLEEPING)
                 p->perf.stime++;
             if (p->state == RUNNABLE)
                 p->perf.retime++;
-            if (p->state == RUNNING){
+            if (p->state == RUNNING) {
                 p->last_rutime++;
                 p->perf.rutime++;
+//                printf("inside inc_stat_ticks() - PID: %d, last_rutime++: %d \n", p->pid, p->last_rutime);
             }
         }
-        release(&p->lock);
     }
 }
 
@@ -329,10 +328,8 @@ fork(void) {
 
     // copy parent's trace-mask
     np->mask = p->mask;
-
     // copy parent's priority
     np->decay_factor = p->decay_factor;
-
     // copy saved user registers.
     *(np->trapframe) = *(p->trapframe);
 
@@ -348,9 +345,8 @@ fork(void) {
     safestrcpy(np->name, p->name, sizeof(p->name));
 
     pid = np->pid;
-
+    // reset the average_bursttime of the child
     release(&np->lock);
-
     acquire(&wait_lock);
     np->parent = p;
     release(&wait_lock);
@@ -361,7 +357,10 @@ fork(void) {
 
     np->fcfs_time = ticks;
 #endif
+//    printf("inside frok() - NEW CHILD PID: %d, average_bursttime: %d \n", np->pid, np->perf.average_bursttime);
+//    printf("inside frok() - NEW CHILD PID: %d, last_rutime: %d \n", np->pid, np->last_rutime);
     release(&np->lock);
+
 
     return pid;
 }
@@ -417,9 +416,10 @@ exit(int status) {
 
     p->xstate = status;
     p->state = ZOMBIE;
-    // TODO: is necessary to update avrg_bursttime on exit?
-    update_avrg_bursttime();
-    p->last_rutime = 0; // reset the last run time
+    // TODO: is necessary to update avrg_bursttime on exit? kept now only for testing
+//    update_avrg_bursttime();
+//    p->last_rutime = 0; // reset the last run time
+//    printf("inside exit() - PID: %d, average_bursttime: %d \n", p->pid, p->perf.average_bursttime);
     release(&wait_lock);
 
     // Jump into the scheduler, never to return.
@@ -736,7 +736,7 @@ sleep(void *chan, struct spinlock *lk) {
     p->state = SLEEPING;
     update_avrg_bursttime();
     p->last_rutime = 0; // reset last run time
-
+//    printf("inside sleep() -  PID: %d, average_bursttime: %d \n", p->pid, p->perf.average_bursttime);
     sched();
 
     // Tidy up.

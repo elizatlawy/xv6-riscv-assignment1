@@ -129,7 +129,7 @@ extern uint64 sys_yield(void);
 
 extern uint64 sys_get_ticks(void);
 
-extern uint64 sys_change_bursttime(void );
+extern uint64 sys_change_bursttime(void);
 
 
 static uint64 (*syscalls[])(void) = {
