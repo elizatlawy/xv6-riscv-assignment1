@@ -11,6 +11,9 @@ void srt_tets3();
 
 void trace_tests();
 
+void trace_all_sys_calls_tests();
+
+
 void fcfs_test1();
 
 void fcfs_test2();
@@ -67,7 +70,7 @@ void large_loop_print() {
 }
 
 int main(int argc, char **argv) {
-    sanity_tests2();
+//    sanity_tests2();
 //    test_scheduler();
 //    fcfs_test2();
 //    cfsd_test1();
@@ -75,8 +78,71 @@ int main(int argc, char **argv) {
 //    srt_tets3();
 //    fcfs_test1();
 //    srt_test1();
+    trace_all_sys_calls_tests();
     exit(0);
 }
+
+void trace_all_sys_calls_tests(){
+    int mask = ((1 << SYS_fork) | (1 << SYS_kill) | (1 << SYS_sbrk)  | ( 1 << SYS_exit) |
+            (1 <<SYS_sleep  )  | (1 << SYS_pipe ) | (1 << SYS_kill) | (1 << SYS_exec) | (1 << SYS_read) | (1 << SYS_chdir) | (1 << SYS_getpid)
+            | (1 << SYS_yield) | (1 << SYS_mkdir) | (1 << SYS_wait_stat) | (1 << SYS_set_priority));
+    sleep(1); //doesn't print this sleep
+    trace(mask, getpid());
+    trace(mask, 0);
+    trace(mask, 1);
+    trace(mask, 2);
+    trace(mask, 3);
+    int pid = fork();//prints fork once
+    if (pid == 0) { // child
+        fork();// prints fork for the second time - the first son forks
+        sbrk(1);
+//        mask= (1<< 13); //to turn on only the sleep bit
+        //mask= (1<< 1)|(1<< 13); you can uncomment this inorder to check you print for both fork and sleep syscalls
+        trace(mask, getpid()); //the first son and the grandchilde changes mask to print sleep
+        sleep(1);
+        fork();//should print nothing
+        exit(0);//shold print nothing
+    } else {
+        sleep(10);// the father doesnt pring it - has original mask
+    }
+    for (int i = 0; i < 3; i++) {
+        if (pid != 0) {
+            pid = fork();
+        }
+    }
+    if (pid != 0) { // parent
+        int status;
+        struct perf perfs[10];
+        int pids[10];
+        for (int i = 0; i < 10; i++) {
+            pids[i] = wait_stat(&status, &perfs[i]);
+        }
+        // print all child's pref only after everyone is finished just to keep the printing in order.
+        for (int i = 0; i < 10; i++) {
+            printf("child (%d) exited with status %d\n", pids[i], status);
+            printf("creation time:    %d\n", perfs[i].ctime);
+            printf("termination time: %d\n", perfs[i].ttime);
+            printf("running time:     %d\n", perfs[i].rutime);
+            printf("runnable time:    %d\n", perfs[i].retime);
+            printf("sleeping time:    %d\n", perfs[i].stime);
+            printf("average_bursttime:    %d\n", perfs[i].average_bursttime);
+        }
+    } else { // child
+        int my_pid = getpid();
+        trace(mask, my_pid);
+        yield();
+        set_priority(2);
+        fprintf(2, "Child %d started running\n", my_pid);
+        int start = get_ticks();
+        int end = 0;
+        end = start + 5; // all child will run for 20 ticks
+        while (1) { // while true
+            if (get_ticks() > end)  // run while loop until reach the correct tick
+                break;
+        }
+    }
+}
+
 
 void sanity_tests2() {
 #ifdef CFSD
@@ -366,14 +432,14 @@ void fcfs_test1() {
     } else { // child
         int my_pid = getpid();
         fprintf(2, "Child %d started running\n", my_pid);
-        int start = get_ticks();
         int end = 0;
+        int start = get_ticks();
         if (my_pid == 4) // first child
             end = start + 24;
         else if (my_pid == 5)// second child
-            end = start + 10;
+            end = start + 3;
         else  // third child
-            end = start + 1;
+            end = start + 4;
         while (1) { // while true
             if (get_ticks() > end) // run while loop until reach the correct tick
                 break;
@@ -525,15 +591,15 @@ void cfsd_test1() {
         if (my_pid == 4) { // first child
             set_priority(1);
         } else if (my_pid == 5) { // second child
-            set_priority(2);
+            set_priority(5); // super-low
         } else if (my_pid == 6) { // third child
-            set_priority(3); // normal
-        } else if (my_pid == 7) { // 4 child
             set_priority(4); // low
+        } else if (my_pid == 7) { // 4 child
+            set_priority(3); // normal
         } else if (my_pid == 8) { // 5 child
-            set_priority(5); // super-low
+            set_priority(2); // high
         } else if (my_pid == 9) { // 6 child
-            set_priority(5); // super-low
+            set_priority(1); // super-high
             sleep(50);
         }
         while (1) { // while true
