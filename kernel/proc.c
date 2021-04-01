@@ -416,9 +416,8 @@ exit(int status) {
 
     p->xstate = status;
     p->state = ZOMBIE;
-    // TODO: is necessary to update avrg_bursttime on exit? kept now only for testing
-//    update_avrg_bursttime();
-//    p->last_rutime = 0; // reset the last run time
+    update_avrg_bursttime();
+    p->last_rutime = 0; // reset the last run time
 //    printf("inside exit() - PID: %d, average_bursttime: %d \n", p->pid, p->perf.average_bursttime);
     release(&wait_lock);
 

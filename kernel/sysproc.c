@@ -127,7 +127,6 @@ uint64 sys_set_priority(void) {
 // yield system call - just for testing
 uint64 sys_yield(void){
     yield();
-    printf("process id: %d Yield by yield syscall\n", myproc()->pid);
     return 0;
 }
 
