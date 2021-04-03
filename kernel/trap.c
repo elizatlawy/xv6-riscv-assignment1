@@ -156,7 +156,6 @@ kerneltrap() {
            yield();
 //           printf(" in kerneltrap(), PID: %d yield() due to timer interrupt\n", myproc()->pid);
     }
-
 #endif
     // the yield() may have caused some traps to occur,
     // so restore trap registers for use by kernelvec.S's sepc instruction.

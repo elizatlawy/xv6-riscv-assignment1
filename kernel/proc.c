@@ -46,7 +46,7 @@ proc_mapstacks(pagetable_t kpgtbl) {
 void inc_stat_ticks(void) {
     struct proc *p;
     for (p = proc; p < &proc[NPROC]; p++) {
-        if (p->state != UNUSED) { // check if p is not null
+        if (p != 0 && p->state != UNUSED) { // check if p is not null
             if (p->state == SLEEPING)
                 p->perf.stime++;
             if (p->state == RUNNABLE)
@@ -54,7 +54,6 @@ void inc_stat_ticks(void) {
             if (p->state == RUNNING) {
                 p->last_rutime++;
                 p->perf.rutime++;
-//                printf("inside inc_stat_ticks() - PID: %d, last_rutime++: %d \n", p->pid, p->last_rutime);
             }
         }
     }
@@ -106,6 +105,7 @@ void update_avrg_bursttime() {
     struct proc *p = myproc();
     int new_average_bursttime = (ALPHA * p->last_rutime) + ((((100 - ALPHA) * p->perf.average_bursttime)) / 100);
     p->perf.average_bursttime = new_average_bursttime;
+    p->last_rutime = 0; // reset the last run time
 }
 
 int calculate_ratio(struct proc *p) {
@@ -357,8 +357,6 @@ fork(void) {
 
     np->fcfs_time = ticks;
 #endif
-//    printf("inside frok() - NEW CHILD PID: %d, average_bursttime: %d \n", np->pid, np->perf.average_bursttime);
-//    printf("inside frok() - NEW CHILD PID: %d, last_rutime: %d \n", np->pid, np->last_rutime);
     release(&np->lock);
 
 
@@ -370,7 +368,6 @@ fork(void) {
 void
 reparent(struct proc *p) {
     struct proc *pp;
-
     for (pp = proc; pp < &proc[NPROC]; pp++) {
         if (pp->parent == p) {
             pp->parent = initproc;
@@ -410,17 +407,11 @@ exit(int status) {
 
     // Parent might be sleeping in wait().
     wakeup(p->parent);
-
     acquire(&p->lock);
-    p->perf.ttime = ticks;
-
     p->xstate = status;
     p->state = ZOMBIE;
-    update_avrg_bursttime();
-    p->last_rutime = 0; // reset the last run time
-//    printf("inside exit() - PID: %d, average_bursttime: %d \n", p->pid, p->perf.average_bursttime);
+    p->perf.ttime = ticks;
     release(&wait_lock);
-
     // Jump into the scheduler, never to return.
     sched();
     panic("zombie exit");
@@ -572,7 +563,6 @@ void scheduler(void) {
         // to release its lock and then re-acquire it
         // before jumping back to us.
         if ( min_proc != 0){
-//            printf("process with pid %d strated with fcfs_time %d\n",min_proc->pid,min_proc->fcfs_time);
             min_proc->state = RUNNING;
             c->proc = min_proc;
             swtch(&c->context, &min_proc->context);
@@ -606,7 +596,6 @@ void scheduler(void) {
         // to release its lock and then reacquire it
         // before jumping back to us.
         if ( min_proc != 0){
-//            printf("process pid %d with average_bursttime: %d was SELECTED\n",min_proc->pid,min_proc->perf.average_bursttime);
             min_proc->state = RUNNING;
             c->proc = min_proc;
             swtch(&c->context, &min_proc->context);
@@ -640,7 +629,6 @@ void scheduler(void) {
         // to release its lock and then reacquire it
         // before jumping back to us.
         if ( min_proc != 0){
-//            printf("priority of pid %d is %d\n", min_proc->pid,min_proc->decay_factor);
             min_proc->state = RUNNING;
             c->proc = min_proc;
             swtch(&c->context, &min_proc->context);
@@ -664,6 +652,7 @@ void
 sched(void) {
     int intena;
     struct proc *p = myproc();
+    update_avrg_bursttime();
     if (!holding(&p->lock))
         panic("sched p->lock");
     if (mycpu()->noff != 1)
@@ -672,7 +661,6 @@ sched(void) {
         panic("sched running");
     if (intr_get())
         panic("sched interruptible");
-
     intena = mycpu()->intena;
     swtch(&p->context, &mycpu()->context);
     mycpu()->intena = intena;
@@ -681,15 +669,14 @@ sched(void) {
 // Give up the CPU for one scheduling round.
 void
 yield(void) {
-//    printf("ticks num yield: %d\n", ticks);
     struct proc *p = myproc();
     acquire(&p->lock);
     p->state = RUNNABLE;
 #ifdef FCFS
     p->fcfs_time = ticks;
 #endif
-    update_avrg_bursttime();
-    p->last_rutime = 0; // reset the last run time
+//    update_avrg_bursttime();
+//    p->last_rutime = 0; // reset the last run time
     sched();
     release(&p->lock);
 }
@@ -729,18 +716,12 @@ sleep(void *chan, struct spinlock *lk) {
 
     acquire(&p->lock);  //DOC: sleeplock1
     release(lk);
-
     // Go to sleep.
     p->chan = chan;
     p->state = SLEEPING;
-    update_avrg_bursttime();
-    p->last_rutime = 0; // reset last run time
-//    printf("inside sleep() -  PID: %d, average_bursttime: %d \n", p->pid, p->perf.average_bursttime);
     sched();
-
     // Tidy up.
     p->chan = 0;
-
     // Reacquire original lock.
     release(&p->lock);
     acquire(lk);
