@@ -103,9 +103,11 @@ myproc(void) {
 
 void update_avrg_bursttime() {
     struct proc *p = myproc();
+//    int prev_average_bursttime = p->perf.average_bursttime;
     int new_average_bursttime = (ALPHA * p->last_rutime) + ((((100 - ALPHA) * p->perf.average_bursttime)) / 100);
     p->perf.average_bursttime = new_average_bursttime;
     p->last_rutime = 0; // reset the last run time
+//    printf("PID: %d update the average_bursttime from: %d to: %d\n",p->pid,prev_average_bursttime, p->perf.average_bursttime);
 }
 
 int calculate_ratio(struct proc *p) {
@@ -148,7 +150,7 @@ allocproc(void) {
     p->pid = allocpid();
     p->state = USED;
     p->perf.ctime = ticks;
-    p->perf.average_bursttime = QUANTUM * 100;
+    p->perf.average_bursttime = QUANTUM * 50;
 #ifdef CFSD
     p->decay_factor = NORMAL;
 #endif
@@ -652,7 +654,6 @@ void
 sched(void) {
     int intena;
     struct proc *p = myproc();
-    update_avrg_bursttime();
     if (!holding(&p->lock))
         panic("sched p->lock");
     if (mycpu()->noff != 1)
@@ -661,6 +662,8 @@ sched(void) {
         panic("sched running");
     if (intr_get())
         panic("sched interruptible");
+    // update the average bursttime upon turning form RUNNING to RUNNABLE, SLEEPING or ZOMBIE
+    update_avrg_bursttime();
     intena = mycpu()->intena;
     swtch(&p->context, &mycpu()->context);
     mycpu()->intena = intena;
@@ -675,8 +678,6 @@ yield(void) {
 #ifdef FCFS
     p->fcfs_time = ticks;
 #endif
-//    update_avrg_bursttime();
-//    p->last_rutime = 0; // reset the last run time
     sched();
     release(&p->lock);
 }
