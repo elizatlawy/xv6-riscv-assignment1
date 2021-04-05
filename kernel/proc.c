@@ -196,12 +196,14 @@ freeproc(struct proc *p) {
     p->chan = 0;
     p->killed = 0;
     p->xstate = 0;
-    p->perf.stime = 0;
-    p->perf.ttime = 0;
-    p->perf.ctime = 0;
-    p->perf.retime = 0;
-    p->perf.rutime = 0;
-    p->perf.average_bursttime = 0;
+    // clean the memory of perf struct
+    memset(&(p->perf), 0,sizeof(perf));
+//    p->perf.stime = 0;
+//    p->perf.ttime = 0;
+//    p->perf.ctime = 0;
+//    p->perf.retime = 0;
+//    p->perf.rutime = 0;
+//    p->perf.average_bursttime = 0;
     p->last_rutime = 0;
     p->decay_factor = 0;
     p->state = UNUSED;
