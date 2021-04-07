@@ -107,7 +107,6 @@ uint64 sys_trace(void) {
     myproc()->mask = mask;
     return 0;
 }
-// TODO: remove all test prints here + in sched function
 uint64 sys_set_priority(void) {
     int decay_fact_arr[] = { // 0 is just empty space for convenience
             0, TESTHIGH, HIGH, NORMAL, LOW, TESTLOW
@@ -118,9 +117,7 @@ uint64 sys_set_priority(void) {
     }
     if (priority < 1 || priority > 5)
         return -1;
-//    printf("id: %d, priority before change %d\n", myproc()->pid, myproc()->decay_factor);
     myproc()->decay_factor = decay_fact_arr[priority];
-//    printf("id: %d, priority after change %d\n", myproc()->pid, myproc()->decay_factor);
     return 0;
 }
 
