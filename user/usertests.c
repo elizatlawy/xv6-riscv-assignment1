@@ -2781,7 +2781,7 @@ main(int argc, char *argv[])
     {sbrkbugs, "sbrkbugs" },
      {badwrite, "badwrite" },
     {badarg, "badarg" },
-    {reparent, "reparent" }, // not work with SRT & 1 CPU due to to many processes created!
+//    {reparent, "reparent" }, // not work with SRT & 1 CPU due to to many processes created!
     {twochildren, "twochildren"},
     {forkfork, "forkfork"},
     {forkforkfork, "forkforkfork"},
@@ -2816,7 +2816,7 @@ main(int argc, char *argv[])
     {mem, "mem"},
     {pipe1, "pipe1"},
     {killstatus, "killstatus"},
-    {preempt, "preempt"}, // not work with FCFS due to inf loop!!
+//    {preempt, "preempt"}, // not work with FCFS due to inf loop!!
     {exitwait, "exitwait"},
     {rmdot, "rmdot"},
     {fourteen, "fourteen"},
