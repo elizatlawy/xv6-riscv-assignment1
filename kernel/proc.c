@@ -65,7 +65,7 @@ void inc_stat_ticks(void) {
 void
 procinit(void) {
     struct proc *p;
-
+    initlock(&fcfs_time_lock, "fcfs_time_lock");
     initlock(&pid_lock, "nextpid");
     initlock(&wait_lock, "wait_lock");
     for (p = proc; p < &proc[NPROC]; p++) {
