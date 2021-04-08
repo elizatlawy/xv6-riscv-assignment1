@@ -136,8 +136,6 @@ uint64 sys_change_bursttime(void){
     int new_bursttime;
     if (argint(0, &new_bursttime) < 0)
         return -1;
-    printf("process id: %d average_bursttime BEFORE change: %d \n",myproc()->pid, myproc()->perf.average_bursttime);
     myproc()->perf.average_bursttime = new_bursttime;
-    printf("process id: %d average_bursttime AFTER change: %d \n",myproc()->pid, myproc()->perf.average_bursttime);
     return 0;
 }
