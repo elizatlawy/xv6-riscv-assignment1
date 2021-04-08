@@ -13,7 +13,9 @@ struct proc proc[NPROC];
 struct proc *initproc;
 
 int nextpid = 1;
+uint64 next_fcfs_time = 1;
 struct spinlock pid_lock;
+struct spinlock fcfs_time_lock;
 
 extern void forkret(void);
 
@@ -124,8 +126,16 @@ allocpid() {
     pid = nextpid;
     nextpid = nextpid + 1;
     release(&pid_lock);
-
     return pid;
+}
+
+uint64 increment_fcfs_time() {
+    uint64 fcfs_time;
+    acquire(&fcfs_time_lock);
+    fcfs_time = next_fcfs_time;
+    next_fcfs_time = next_fcfs_time + 1;
+    release(&fcfs_time_lock);
+    return fcfs_time;
 }
 
 // Look in the process table for an UNUSED proc.
@@ -196,8 +206,7 @@ freeproc(struct proc *p) {
     p->chan = 0;
     p->killed = 0;
     p->xstate = 0;
-    // clean the memory of perf struct
-//    memset(&(p->perf), 0,sizeof(perf));
+    p->fcfs_time = 0;
     p->perf.stime = 0;
     p->perf.ttime = 0;
     p->perf.ctime = 0;
@@ -284,7 +293,7 @@ userinit(void) {
 
     p->state = RUNNABLE;
 #ifdef FCFS
-    p->fcfs_time = ticks;
+    p->fcfs_time = increment_fcfs_time();
 #endif
 
     release(&p->lock);
@@ -358,12 +367,9 @@ fork(void) {
     acquire(&np->lock);
     np->state = RUNNABLE;
 #ifdef FCFS
-
-    np->fcfs_time = ticks;
+    np->fcfs_time = increment_fcfs_time();
 #endif
     release(&np->lock);
-
-
     return pid;
 }
 
@@ -678,7 +684,7 @@ yield(void) {
     acquire(&p->lock);
     p->state = RUNNABLE;
 #ifdef FCFS
-    p->fcfs_time = ticks;
+    p->fcfs_time = increment_fcfs_time();
 #endif
     sched();
     release(&p->lock);
@@ -741,7 +747,7 @@ wakeup(void *chan) {
             if (p->state == SLEEPING && p->chan == chan) {
                 p->state = RUNNABLE;
 #ifdef FCFS
-                p->fcfs_time = ticks;
+                p->fcfs_time = increment_fcfs_time();
 #endif
             }
             release(&p->lock);
@@ -764,7 +770,7 @@ kill(int pid) {
                 // Wake process from sleep().
                 p->state = RUNNABLE;
 #ifdef FCFS
-                p->fcfs_time = ticks;
+                p->fcfs_time = increment_fcfs_time();
 #endif
             }
             release(&p->lock);

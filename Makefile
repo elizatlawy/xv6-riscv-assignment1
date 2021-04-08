@@ -138,6 +138,7 @@ UPROGS=\
 	$U/_grind\
 	$U/_wc\
 	$U/_zombie\
+	$U/_myprog\
 
 
 fs.img: mkfs/mkfs README path $(UPROGS)

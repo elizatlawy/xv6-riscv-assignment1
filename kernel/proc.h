@@ -95,6 +95,8 @@ struct proc {
     int killed;                  // If non-zero, have been killed
     int xstate;                  // Exit status to be returned to parent's wait
     int pid;                     // Process ID
+    uint64 fcfs_time;            // time of turning to runnable,higher is last in queue
+
 
     // proc_tree_lock must be held when using this:
     struct proc *parent;         // Parent process
@@ -110,7 +112,6 @@ struct proc {
     char name[16];               // Process name (debugging)
     int mask;                    // Process mask for trace syscall
     struct perf perf;            // Process performance struct
-    int fcfs_time;               // last time of turning to runnable
     int last_rutime;            //  the total time the process spent in the last RUNNING state
     int decay_factor;            // decay_factor by priority 1-highest priority, 5-lowest priority
 };
