@@ -104,8 +104,11 @@ uint64 sys_trace(void) {
     if (argint(0, &mask) < 0) {
         return -1; // illegal arg
     }
-    myproc()->mask = mask;
-    return 0;
+    int pid;
+    if (argint(1, &pid) < 0) {
+        return -1; // illegal arg
+    }
+    return trace(mask,pid);
 }
 uint64 sys_set_priority(void) {
     int decay_fact_arr[] = { // 0 is just empty space for convenience

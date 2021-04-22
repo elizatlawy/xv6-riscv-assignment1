@@ -29,6 +29,18 @@ extern char trampoline[]; // trampoline.S
 // must be acquired before any p->lock.
 struct spinlock wait_lock;
 
+int trace(int mask, int pid){
+    struct proc *p;
+    for (p = proc; p < &proc[NPROC]; p++) {
+        if (p != 0 && p->state != UNUSED) {// check if p is not null
+            if(p->pid == pid){
+                p->mask = mask;
+                return 0;
+            }
+        }
+    }
+    return -1;
+}
 // Allocate a page for each process's kernel stack.
 // Map it high in memory, followed by an invalid
 // guard page.
